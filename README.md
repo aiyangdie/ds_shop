@@ -21,8 +21,11 @@ ____
 > other (支付目录)  
 > install (程序安装)  
 > template (模板)  
-> config.php (数据库配置文件)
+> config.php (数据库配置文件)  
+> doc.php (对接文档)  
 
+>Nginx静态规则:
+> rewrite ^/api/(\w+)\.do$ /api.php?act=$1 last;  
 
 *特别强调*
 > 1、此版本为正式免费版本，其他的均属于二次开发。  
@@ -36,9 +39,10 @@ __使用协议__
 * 在您下载源码后视为您已经了解使用协议并知晓法律协议。
 ---
 
-[IDC服务商] 
+[IDC、支付服务商] 
 * 小白云-云服务器 : https://www.xiaobaiyun.cn/
 * 我爱支付，让交易更有价值 : https://www.52zhifu.com/
   
 ----
-> [QQ交流群] https://jq.qq.com/?_wv=1027&k=FAniMXmE
+> [QQ交流群]  https://jq.qq.com/?_wv=1027&k=FAniMXmE  
+> [接口助手]  https://open-api.qqzwb.com/

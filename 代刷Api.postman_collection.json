@@ -1,0 +1,498 @@
+{
+	"info": {
+		"_postman_id": "07840fbf-ecf2-4def-8cb8-f33dbf152050",
+		"name": "代刷Api",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "克隆商品信息",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{WEB_SITE_URL}}/api/clone.do?key={{CLONE_KEY}}",
+					"host": [
+						"{{WEB_SITE_URL}}"
+					],
+					"path": [
+						"api",
+						"clone.do"
+					],
+					"query": [
+						{
+							"key": "key",
+							"value": "{{CLONE_KEY}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "获取商品【不可对分类进行条件查询】",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{WEB_SITE_URL}}/api/tools.do?key={{API_KEY}}&limit=50",
+					"host": [
+						"{{WEB_SITE_URL}}"
+					],
+					"path": [
+						"api",
+						"tools.do"
+					],
+					"query": [
+						{
+							"key": "key",
+							"value": "{{API_KEY}}",
+							"description": "API对接密钥"
+						},
+						{
+							"key": "limit",
+							"value": "50",
+							"description": "商品条数"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "获取订单",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{WEB_SITE_URL}}/api/orders.do?key={{API_KEY}}",
+					"host": [
+						"{{WEB_SITE_URL}}"
+					],
+					"path": [
+						"api",
+						"orders.do"
+					],
+					"query": [
+						{
+							"key": "key",
+							"value": "{{API_KEY}}",
+							"description": "API对接密钥"
+						},
+						{
+							"key": "limit",
+							"value": "50",
+							"disabled": true
+						},
+						{
+							"key": "tid",
+							"value": "商品ID",
+							"disabled": true
+						},
+						{
+							"key": "sign",
+							"value": null,
+							"disabled": true
+						},
+						{
+							"key": "format",
+							"value": "json",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "改变订单状态",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{WEB_SITE_URL}}/api/change.do?key={{API_KEY}}&id=1&status=1",
+					"host": [
+						"{{WEB_SITE_URL}}"
+					],
+					"path": [
+						"api",
+						"change.do"
+					],
+					"query": [
+						{
+							"key": "key",
+							"value": "{{API_KEY}}",
+							"description": "API对接密钥"
+						},
+						{
+							"key": "id",
+							"value": "1",
+							"description": "订单ID"
+						},
+						{
+							"key": "status",
+							"value": "1",
+							"description": "1:已完成,2:正在处理,3:异常,4:待处理"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "获取商品分类",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{WEB_SITE_URL}}/api/classlist.do",
+					"host": [
+						"{{WEB_SITE_URL}}"
+					],
+					"path": [
+						"api",
+						"classlist.do"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "获取指定分类下商品",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "user",
+							"value": "{{SUB_SITE_USERNAME}}",
+							"description": "分站用户名",
+							"type": "text"
+						},
+						{
+							"key": "pass",
+							"value": "{{SUB_SITE_PASSWORD}}",
+							"description": "密码",
+							"type": "text"
+						},
+						{
+							"key": "cid",
+							"value": "1",
+							"description": "分类ID",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{WEB_SITE_URL}}/api/goodslistbycid.do",
+					"host": [
+						"{{WEB_SITE_URL}}"
+					],
+					"path": [
+						"api",
+						"goodslistbycid.do"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "获取商品【分站加价】",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "user",
+							"value": "{{SUB_SITE_USERNAME}}",
+							"description": "分站用户名",
+							"type": "text"
+						},
+						{
+							"key": "pass",
+							"value": "{{SUB_SITE_PASSWORD}}",
+							"description": "分站密码",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{WEB_SITE_URL}}/api/goodslist.do",
+					"host": [
+						"{{WEB_SITE_URL}}"
+					],
+					"path": [
+						"api",
+						"goodslist.do"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "商品详情",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "tid",
+							"value": "4",
+							"type": "text"
+						},
+						{
+							"key": "user",
+							"value": "{{SUB_SITE_USERNAME}}",
+							"description": "分站用户名",
+							"type": "text",
+							"disabled": true
+						},
+						{
+							"key": "pass",
+							"value": "{{SUB_SITE_PASSWORD}}",
+							"description": "分站密码",
+							"type": "text",
+							"disabled": true
+						}
+					]
+				},
+				"url": {
+					"raw": "{{WEB_SITE_URL}}/api/goodsdetails.do",
+					"host": [
+						"{{WEB_SITE_URL}}"
+					],
+					"path": [
+						"api",
+						"goodsdetails.do"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "获取商品库存",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": []
+				},
+				"url": {
+					"raw": "{{WEB_SITE_URL}}/api/getleftcount.do?tid=8,9",
+					"host": [
+						"{{WEB_SITE_URL}}"
+					],
+					"path": [
+						"api",
+						"getleftcount.do"
+					],
+					"query": [
+						{
+							"key": "tid",
+							"value": "8,9",
+							"description": "多个商品id使用,逗号分隔，最多只能查询20个"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "商品下单",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "tid",
+							"value": "8",
+							"type": "text"
+						},
+						{
+							"key": "user",
+							"value": "{{SUB_SITE_USERNAME}}",
+							"type": "text"
+						},
+						{
+							"key": "pass",
+							"value": "{{SUB_SITE_PASSWORD}}",
+							"type": "text"
+						},
+						{
+							"key": "input1",
+							"value": "123456",
+							"type": "text"
+						},
+						{
+							"key": "input2",
+							"value": "",
+							"description": "根据商品inputs定义",
+							"type": "text",
+							"disabled": true
+						},
+						{
+							"key": "input3",
+							"value": "",
+							"description": "根据商品inputs定义",
+							"type": "text",
+							"disabled": true
+						},
+						{
+							"key": "input4",
+							"value": "",
+							"description": "根据商品inputs定义",
+							"type": "text",
+							"disabled": true
+						},
+						{
+							"key": "input5",
+							"value": "",
+							"description": "根据商品inputs定义",
+							"type": "text",
+							"disabled": true
+						},
+						{
+							"key": "num",
+							"value": "1",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{WEB_SITE_URL}}/api/pay.do",
+					"host": [
+						"{{WEB_SITE_URL}}"
+					],
+					"path": [
+						"api",
+						"pay.do"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "搜索订单",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{WEB_SITE_URL}}/api/search.do?id=8",
+					"host": [
+						"{{WEB_SITE_URL}}"
+					],
+					"path": [
+						"api",
+						"search.do"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "8"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "站点基础配置信息",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{WEB_SITE_URL}}/api/siteinfo.do",
+					"host": [
+						"{{WEB_SITE_URL}}"
+					],
+					"path": [
+						"api",
+						"siteinfo.do"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "生成Apptoken通信密钥",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{WEB_SITE_URL}}/api/token.do?key={{$randomInt}}",
+					"host": [
+						"{{WEB_SITE_URL}}"
+					],
+					"path": [
+						"api",
+						"token.do"
+					],
+					"query": [
+						{
+							"key": "key",
+							"value": "{{$randomInt}}"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "WEB_SITE_URL",
+			"value": ""
+		},
+		{
+			"key": "CLONE_KEY",
+			"value": ""
+		},
+		{
+			"key": "API_KEY",
+			"value": ""
+		},
+		{
+			"key": "SUB_SITE_USERNAME",
+			"value": ""
+		},
+		{
+			"key": "SUB_SITE_PASSWORD",
+			"value": ""
+		}
+	]
+}
