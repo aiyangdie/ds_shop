@@ -44,5 +44,6 @@ __使用协议__
 * 我爱支付，让交易更有价值 : https://www.52zhifu.com/
   
 ----
-> [QQ交流群]  https://jq.qq.com/?_wv=1027&k=FAniMXmE  
-> [接口助手]  https://open-api.qqzwb.com/
+> [QQ交流群①]  https://jq.qq.com/?_wv=1027&k=FAniMXmE  
+> [QQ交流群②]  https://jq.qq.com/?_wv=1027&k=RGnyIRu9  
+> [接口助手]  https://open-api.qqzwb.com/  
