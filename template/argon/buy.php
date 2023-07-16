@@ -1,6 +1,7 @@
 <?php
 if(!defined('IN_CRONLITE'))exit();
-$cid = isset($_GET['cid'])?$_GET['cid']:exit('分类ID不正确');
+$cid = isset($_GET['cid']) ? $_GET['cid']:exit('分类ID不正确');
+$cid = intval($cid);
 $info=$DB->getRow("SELECT * FROM pre_class WHERE cid=$cid");
 include_once TEMPLATE_ROOT.'argon/head.php';
 ?>
