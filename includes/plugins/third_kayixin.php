@@ -97,7 +97,7 @@ class third_kayixin{
 			$list = array();
 			if($ret['type'] == 2){
 				foreach ($ret['data2'] as $dir) {
-					foreach ($dir['data'] as $v) {
+					foreach ((array) $dir['data'] as $v) {
 						$list[] = array(
 							'id' => $v['id'],
 							'name' => $v['name']
