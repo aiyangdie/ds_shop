@@ -8,18 +8,18 @@ class third_yile{
 	static public $info = [
 		'name'        => 'third_yile',  //插件名称，必须和类名一致
 		'type'        => 'third',  //插件类型，固定为third
-		'title'       => '亿乐社区',  //插件显示名称
+		'title'       => '亿乐SUP',  //插件显示名称
 		'author'      => '彩虹',
 		'version'     => '1.0',
 		'link'        => '',
 		'sort'        => 11,  //在对接列表显示的排序号
 		'showedit'    => false,  //是否在编辑商品页面插入html
 		'showip'      => true,  //是否显示加ip白名单提示
-		'pricejk'     => 2,  //价格监控模式，2为可以下单时检查，1为直接监控批量更新
+		'pricejk'     => 1,  //价格监控模式，2为可以下单时检查，1为直接监控批量更新
 		'input' => [  //配置对接站点的输入框名称
 			'url' => '网站域名',
-			'username' => 'TokenID',
-			'password' => '密匙',
+			'username' => 'AppID',
+			'password' => '秘钥',
 			'paypwd' => false,
 			'paytype' => false,
 		],
@@ -44,32 +44,38 @@ class third_yile{
      */
 	public function do_goods($goods_id, $goods_type, $goods_param, $num = 1, $input = array(), $money, $tradeno, $inputsname)
 	{
+		$inputname = explode('|',$goods_param);
 		$result['code'] = -1;
-		$url = '/api/order';
-		$param = array('api_token'=>$this->config['username'], 'timestamp'=>time(), 'gid'=>$goods_id, 'num'=>$num);
-		if (is_array($input) && $input){
-			$i=1;
-			foreach ($input as $val){
-				$param['value'.$i]=$val;
+		$url = '/openapi/customer/Goods/Buy';
+		$buy_params = [];
+		$i = 0;
+		foreach($inputname as $key){
+			if($key == 'need_num_0'){
+				$buy_params[$key] = (string)$num;
+				$num = 1;
+			}else{
+				$buy_params[$key] = $input[$i];
 				$i++;
 			}
 		}
-		$sign = $this->getSign($param, $this->config['password']);
-		$param['sign'] = $sign;
-		$post = http_build_query($param);
-		$data = $this->get_curl($url,$post);
+		$param = ['goods_sn'=>$goods_id, 'buy_number'=>$num, 'buy_params'=>$buy_params];
+		$data = $this->get_curl($url,$param);
 		$json = json_decode($data,true);
-		if (isset($json['status']) && $json['status']==0) {
+		if (isset($json['code']) && $json['code']==0) {
 			$result = array(
 				'code' => 0,
-				'id' => $json['id']
+				'id' => $json['data']['order_sn']
 			);
-			if(strpos($json['message'],'购买卡密')!==false){
+			if(isset($json['data']['buy_card_code_list']) && count($json['data']['buy_card_code_list']) > 0){
 				$result['faka'] = true;
-				$result['kmdata'] = $json['data'];
+				$kmdata = [];
+				foreach($json['data']['buy_card_code_list'] as $card){
+					$kmdata[] = ['card' => $card];
+				}
+				$result['kmdata'] = $kmdata;
 			}
 		} elseif(isset($json['message'])){
-			$result['message'] = $json['message'];
+			$result['message'] = $this->handle_message($json['message']);
 		} else{
 			$result['message'] = $data;
 		}
@@ -81,23 +87,21 @@ class third_yile{
      * @return array
      */
 	public function goods_list(){
-		$url = '/api/goods/list';
-		$param = array('api_token'=>$this->config['username'], 'timestamp'=>time());
-		$sign = $this->getSign($param, $this->config['password']);
-		$param['sign'] = $sign;
-		$post = http_build_query($param);
-		$ret = $this->get_curl($url,$post);
+		$url = '/openapi/customer/Goods/List';
+		$ret = $this->get_curl($url);
 		if (!$ret = json_decode($ret, true)) {
 			return '打开对接网站失败';
-		} elseif ($ret['status'] !== 0) {
-			return $ret['message'];
+		} elseif ($ret['code'] !== 0) {
+			return $this->handle_message($ret['message']);
 		} else {
 			$list = array();
 			foreach ($ret['data'] as $v) {
 				$list[] = array(
-					'id' => $v['gid'],
+					'id' => $v['serial_number'],
 					'name' => $v['name'],
-					'close' => $v['close']
+					'price' => $v['price'],
+					'stock' => $v['stock'],
+					'is_close' => $v['is_close']
 				);
 			}
 			return $list;
@@ -110,23 +114,40 @@ class third_yile{
      * @return array
      */
 	public function goods_info($goods_id){
-		$url = '/api/goods/info';
-		$param = array('api_token'=>$this->config['username'], 'timestamp'=>time(), 'gid'=>$goods_id);
-		$sign = $this->getSign($param, $this->config['password']);
-		$param['sign'] = $sign;
-		$post = http_build_query($param);
-		$ret = $this->get_curl($url,$post);
+		$url = '/openapi/customer/Goods/Show';
+		$param = ['goods_sn'=>$goods_id];
+		$ret = $this->get_curl($url,$param);
 		if (!$ret = json_decode($ret, true)) {
 			return '打开对接网站失败';
-		} elseif ($ret['status'] !== 0) {
-			return $ret['message'];
+		} elseif ($ret['code'] !== 0) {
+			return $this->handle_message($ret['message']);
 		} else {
 			$result = $ret['data'];
-			$paramname = '';
-			foreach($result['inputs'] as $v){
-				$paramname.=$v[0].'|';
+			$result['image'] = $result['image_urls'][0];
+			if($result['image'] && substr($result['image'],0,1)=='/'){
+				$result['image'] = ($this->config['protocol']==1?'https://':'http://') . $this->config['url'].$result['image'];
 			}
-			$result['paramname'] = trim($paramname, '|');
+			$result['input'] = $result['buy_params'][0]['name'];
+			$inputs = '';
+			$goodsparam = '';
+			foreach($result['buy_params'] as $row){
+				$goodsparam .= $row['key'].'|';
+				if($row['key'] == 'need_num_0' && $row['type'] == 7){
+					$result['buy_max_limit'] = $row['verify']['max'];
+					$result['buy_min_limit'] = $row['verify']['min'];
+					continue;
+				}
+				if($result['input'] == $row['name']) continue;
+				if($row['type'] == 3 || $row['type'] == 5){
+					$inputs .= $row['name'].'{'.$row['type_config'].'}|';
+				}elseif($row['type'] == 7 || $row['type'] == 8){
+					$inputs .= $row['name'].'[multi]|';
+				}else{
+					$inputs .= $row['name'].'|';
+				}
+			}
+			$result['inputs'] = trim($inputs, '|');
+			$result['goodsparam'] = trim($goodsparam, '|');
 			return $result;
 		}
 	}
@@ -139,121 +160,84 @@ class third_yile{
      * @return array
      */
 	public function query_order($orderid, $goodsid, $value = []){
-		$order_state = array(0=>'等待中',1=>'进行中',2=>'退单中',3=>'已退单',4=>'异常中',5=>'补单中',6=>'已更新',90=>'已完成',91=>'已退单',92=>'已退款');
-		$url = '/api/order/query';
-		$param = array('api_token'=>$this->config['username'], 'timestamp'=>time(), 'id'=>$orderid);
-		$sign = $this->getSign($param, $this->config['password']);
-		$param['sign'] = $sign;
-		$post = http_build_query($param);
-		$ret = $this->get_curl($url,$post);
+		$order_state = array(0=>'等待中',1=>'已付款',2=>'待处理',3=>'处理中',4=>'补单中',5=>'退单中',6=>'已完成',7=>'已退单',8=>'已退款',9=>'处理异常',10=>'下单失败');
+		$url = '/openapi/customer/Order/Show';
+		$param = ['order_sn'=>$orderid];
+		$ret = $this->get_curl($url,$param);
 		if (!$ret = json_decode($ret, true)) {
 			return false;
-		} elseif ($ret['status'] !== 0) {
-			return $ret['message'];
+		} elseif ($ret['code'] !== 0) {
+			return $this->handle_message($ret['message']);
 		} else {
 			$v = $ret['data'];
-			return array('num'=>$v['num'],'start_num'=>$v['start_num'],'now_num'=>$v['now_num'],'add_time'=>$v['created_at'],'order_state'=>$order_state[$v['status']]);
+			return array('num'=>$v['buy_number'],'start_num'=>$v['callback_start_num'],'now_num'=>$v['callback_current_num'],'order_state'=>$order_state[$v['status']], 'add_time'=>'');
 		}
 	}
 
-	/**
-     * 价格监控（1个商品）
-     * @return int 成功改变的商品数量
-     */
-	public function pricejk_one($tool){
+	public function pricejk($shequid,&$success){
 		global $DB,$conf;
-		$success=0;
-		$details = $this->goods_info($tool['goods_id']);
-		if(is_array($details)){
-			$rs2=$DB->query("SELECT * FROM pre_tools WHERE is_curl=2 AND shequ={$tool['shequ']} AND goods_id={$tool['goods_id']}");
+		$list = $this->goods_list();
+		if(is_array($list)){
+			$price_arr = array();
+			$goods_status_arr = array();
+			$stock_arr = array();
+			foreach($list as $row){
+				$price_arr[$row['id']] = $row['price'];
+				$goods_status_arr[$row['id']] = $row['is_close']; //1 关闭 0 正常
+				$stock_arr[$row['id']] = $row['stock'];
+			}
+			$rs2=$DB->query("SELECT * FROM pre_tools WHERE is_curl=2 AND shequ='{$shequid}' AND active=1 AND cid IN ({$conf['pricejk_cid']})");
 			while($res2 = $rs2->fetch())
 			{
 				if($res2['price']==='0.00')continue;
-				$price = ceil($details['price'] * $res2['value'] * 100)/100;
-				if($conf['pricejk_edit']==1 && $price>$res2['price'] && $res2['prid']>0){
-					$DB->exec("update `pre_tools` set `price` ='{$price}' where `tid`='{$res2['tid']}'");
-					$success++;
-				}elseif($conf['pricejk_edit']==0 && $price!=$res2['price'] && $res2['prid']>0){
-					$DB->exec("update `pre_tools` set `price` ='{$price}' where `tid`='{$res2['tid']}'");
-					$success++;
+				if(isset($price_arr[$res2['goods_id']]) && $price_arr[$res2['goods_id']]>0 && $res2['prid']>0){
+					$price = ceil($price_arr[$res2['goods_id']] * 100)/100;
+					if($conf['pricejk_edit']==1 && $price>$res2['price']){
+						$DB->exec("update `pre_tools` set `price` ='{$price}' where `tid`='{$res2['tid']}'");
+						$success++;
+					}elseif($conf['pricejk_edit']==0 && $price!=$res2['price']){
+						$DB->exec("update `pre_tools` set `price` ='{$price}' where `tid`='{$res2['tid']}'");
+						$success++;
+					}
 				}
-				if($details['close']==1 && $res2['close']==0){
-					$DB->exec("update `pre_tools` set `close`=1 where `tid`='{$res2['tid']}'");
-				}elseif($details['close']==0 && $res2['close']==1){
-					$DB->exec("update `pre_tools` set `close`=0 where `tid`='{$res2['tid']}'");
+				if(isset($goods_status_arr[$res2['goods_id']])){
+					if($goods_status_arr[$res2['goods_id']]==1 && $res2['close']==0){
+						$DB->exec("update `pre_tools` set `close`=1 where `tid`='{$res2['tid']}'");
+					}elseif($goods_status_arr[$res2['goods_id']]==0 && $res2['close']==1){
+						$DB->exec("update `pre_tools` set `close`=0 where `tid`='{$res2['tid']}'");
+					}
 				}
-				$DB->exec("update `pre_tools` set `uptime`='".time()."' where `tid`='{$res2['tid']}'");
-			}
-		}elseif(strpos($details,'商品不存在')!==false){
-			$rs2=$DB->query("SELECT * FROM pre_tools WHERE is_curl=2 AND shequ={$tool['shequ']} AND goods_id={$tool['goods_id']}");
-			while($res2 = $rs2->fetch())
-			{
-				$DB->exec("update `pre_tools` set `close`=1,`uptime`='".time()."' where `tid`='{$res2['tid']}'");
-				$success++;
-			}
-		}
-		return $success;
-	}
-
-	/**
-     * 价格监控（批量）
-     * @return bool
-     */
-	public function pricejk($shequid,&$success){
-		global $DB,$conf;
-		if($conf['pricejk_yile']==1){
-			$pricejk_time = $conf['pricejk_time']?$conf['pricejk_time']:600;
-			for($i=0;$i<10;$i++){
-				$tool=$DB->getRow("SELECT * FROM pre_tools WHERE is_curl=2 AND shequ='{$shequid}' AND active=1 AND cid IN ({$conf['pricejk_cid']}) AND uptime<'".(time()-$pricejk_time)."' ORDER BY uptime ASC");
-				if(!$tool)break;
-				$count = $this->pricejk_one($tool);
-				$success+=$count;
+				if(isset($stock_arr[$res2['goods_id']]) && $stock_arr[$res2['goods_id']]!==-1 && $res2['stock']!=$stock_arr[$res2['goods_id']]){
+					$DB->exec("update `pre_tools` set `stock`=:stock where `tid`='{$res2['tid']}'", [':stock'=>$stock_arr[$res2['goods_id']]]);
+				}
 			}
 			return true;
 		}else{
-			$list = $this->goods_list();
-			if(is_array($list)){
-				$goods_status_arr = array();
-				foreach($list as $row){
-					$goods_status_arr[$row['id']] = $row['close']; //商品状态 1为禁止下单
-				}
-				$rs2=$DB->query("SELECT * FROM pre_tools WHERE is_curl=2 AND shequ='{$shequid}' AND active=1 AND cid IN ({$conf['pricejk_cid']})");
-				while($res2 = $rs2->fetch())
-				{
-					if(isset($goods_status_arr[$res2['goods_id']])){
-						if($goods_status_arr[$res2['goods_id']]==1 && $res2['close']==0){
-							$DB->exec("update `pre_tools` set `close`=1 where `tid`='{$res2['tid']}'");
-						}elseif($goods_status_arr[$res2['goods_id']]==0 && $res2['close']==1){
-							$DB->exec("update `pre_tools` set `close`=0 where `tid`='{$res2['tid']}'");
-						}
-					}else{
-						$DB->exec("update `pre_tools` set `close`=1 where `tid`='{$res2['tid']}'");
-					}
-				}
-				return true;
-			}else{
-				return $list;
-			}
+			return $list;
 		}
 	}
 
-	private function get_curl($path,$post=0,$referer=0,$cookie=0,$header=0,$addheader=0){
-		$url = 'http://' . $this->config['url'] . $path;
-		return get_curl($url,$post,$referer,$cookie,$header,0,0,$addheader);
+	private function get_curl($path,$post=0){
+		$url = ($this->config['protocol']==1?'https://':'http://') . $this->config['url'] . $path;
+		$AppId = $this->config['username'];
+		$AppSecret = $this->config['password'];
+		$AppTimestamp = time();
+		$AppToken = sha1($AppId . $AppSecret . $path . $AppTimestamp);
+		$header[] = "AppId: ".$AppId;
+		$header[] = "AppToken: ".$AppToken;
+		$header[] = "AppTimestamp: ".$AppTimestamp;
+		$header[] = 'Content-Type: application/json; charset=UTF-8';
+		if($post){
+			$post = json_encode($post);
+		}
+		return shequ_get_curl($url,$post,0,0,0,$header);
 	}
 
-	private function getSign($param, $key)
-	{
-		$signPars = "";
-		ksort($param);
-		foreach ($param as $k => $v) {
-			if ("sign" != $k && "" != $v) {
-				$signPars .= $k . "=" . $v . "&";
-			}
+	private function handle_message($message){
+		if(is_array($message)){
+			return $message['field'].$message['message'];
+		}else{
+			return $message;
 		}
-		$signPars = trim($signPars, '&');
-		$signPars .= $key;
-		$sign = md5($signPars);
-		return $sign;
 	}
 }

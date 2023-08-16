@@ -204,7 +204,7 @@ class third_yunbao{
 		for($i=0;$i<10;$i++){
 			$tool=$DB->getRow("SELECT * FROM pre_tools WHERE is_curl=2 AND shequ='{$shequid}' AND active=1 AND cid IN ({$conf['pricejk_cid']}) AND uptime<'".(time()-$pricejk_time)."' AND goods_type=1 ORDER BY uptime ASC");
 			if(!$tool)break;
-			$count = $this->stockjk_one($shequ, $tool);
+			$count = $this->stockjk_one($tool);
 			$success+=$count;
 		}
 		return true;*/

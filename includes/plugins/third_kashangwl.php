@@ -212,7 +212,7 @@ class third_kashangwl{
 	}
 
 	private function get_curl($path,$post=0,$referer=0,$cookie=0,$header=0,$addheader=0){
-		$url = 'http://www.kashangwl.com' . $path;
+		$url = ($this->config['protocol']==1?'https://':'http://') . $this->config['url'] . $path;
 		return shequ_get_curl($url,$post,$referer,$cookie,$header,$addheader);
 	}
 

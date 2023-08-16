@@ -73,32 +73,33 @@ class third_kakayun{
 		return $result;
 	}
 
-	public function goods_list(){
-		$url = '/dockapi/index/getallgoods.html';
+	public function goods_list($page = 1, $limit = 50){
+		if($page<=0)$page=1;
+		$url = '/dockapi/v2/getallgoods.html';
 		$param = [
-			'userid' => $this->config['username']
+			'userid' => $this->config['username'],
+			'page' => $page,
+			'limit' => $limit
 		];
 		$param['sign'] = $this->getSign($param,$this->config['password']);
 		$data = $this->get_curl($url,http_build_query($param));
 		$json = json_decode($data,true);
 		if (isset($json['code']) && $json['code']==1) {
 			$list = [];
-			foreach($json['data'] as $rows){
-				foreach($rows['goods'] as $row){
-					$list[] = array(
-						'id' => $row['id'],
-						'name' => $row['goodsname'],
-						'shopimg' => $row['imgurl'],
-						'price' => $row['goodsprice'],
-						'status' => $row['goodsstatus'],
-						'type' => $row['goodstype'],
-						'alert' => $row['tiptext'],
-						'desc' => $row['details'],
-						'min' => $row['buyminnum'],
-						'max' => $row['buymaxnum'],
-						'stock' => $row['stock']
-					);
-				}
+			foreach($json['data'] as $row){
+				$list[] = array(
+					'id' => $row['goodsid'],
+					'name' => $row['goodsname'],
+					'shopimg' => $row['imgurl'],
+					'price' => $row['goodsprice'],
+					'status' => $row['goodsstatus'],
+					'type' => $row['goodstype'],
+					'alert' => $row['tiptext'],
+					'desc' => $row['details'],
+					'min' => $row['buyminnum'],
+					'max' => $row['buymaxnum'],
+					'stock' => $row['stock']
+				);
 			}
 			return $list;
 		}elseif (isset($json['msg'])){
@@ -109,7 +110,7 @@ class third_kakayun{
 	}
 
 	public function goods_info($goods_id){
-		$url = '/dockapi/index/goodsdetails.html';
+		$url = '/dockapi/v2/goodsdetails.html';
 		$param = [
 			'userid' => $this->config['username'],
 			'goodsid' => $goods_id
@@ -122,8 +123,8 @@ class third_kakayun{
 			$result = array(
 				'id' => $row['id'],
 				'name' => $row['goodsname'],
-				'shopimg' => $row['imgurl'],
-				'price' => $json['price']['data']['goodsprice'],
+				'shopimg' => $row['imgurl']?$row['imgurl']:$row['groupimgurl'],
+				'price' => $row['goodsprice'],
 				'status' => $row['goodsstatus'],
 				'type' => $row['goodstype'],
 				'alert' => $row['tiptext'],
@@ -162,13 +163,25 @@ class third_kakayun{
 	public function pricejk($shequid, &$success)
 	{
 		global $DB, $conf;
-		$list = $this->goods_list();
-		if (is_array($list)) {
+		$page = 1;
+		$list = [];
+		while(true){
+			$newlist = $this->goods_list($page);
+			if(!is_array($newlist)){
+				return $newlist;
+			}elseif(count($newlist) == 0){
+				break;
+			}
+			$list = array_merge($list, $newlist);
+			$page++;
+			usleep(300000);
+		}
+		if(count($list)>0){
 			$price_arr = array();
 			$goods_status_arr = array();
 			$stock_arr = array();
 			foreach ($list as $row) {
-				$price_arr[$row['id']] = round($row['price']/100, 2);
+				$price_arr[$row['id']] = round($row['price'], 2);
 				$goods_status_arr[$row['id']] = $row['status']; //商品状态 0下架 1出售中
 				$stock_arr[$row['id']] = $row['stock']; //库存
 			}
@@ -191,16 +204,15 @@ class third_kakayun{
 					}elseif($goods_status_arr[$res2['goods_id']]==1 && $res2['close']==1){
 						$DB->exec("update `pre_tools` set `close`=0 where `tid`='{$res2['tid']}'");
 					}
-				}elseif($res2['close']==0){
+				}else{
 					$DB->exec("update `pre_tools` set `close`=1 where `tid`='{$res2['tid']}'");
 				}
 				if(isset($stock_arr[$res2['goods_id']]) && $stock_arr[$res2['goods_id']]!==null && $res2['stock']!==$stock_arr[$res2['goods_id']]){
 					$DB->exec("update `pre_tools` set `stock`=:stock where `tid`='{$res2['tid']}'", [':stock'=>$stock_arr[$res2['goods_id']]]);
 				}
 			}
-			return true;
-		} else {
-			return '获取商品列表失败';
+		}else{
+			return '商品列表为空';
 		}
 	}
 
