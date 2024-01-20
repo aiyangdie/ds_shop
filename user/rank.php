@@ -18,10 +18,10 @@ $thtime=date("Y-m-d").' 00:00:00';
 $lastday=date("Y-m-d",strtotime("-1 day")).' 00:00:00';
 $limit = $conf['rank_reward']>10?$conf['rank_reward']:10;
 if($_GET['last']==1){
-	$sql = "select a.zid,(select b.sitename from pre_site as b where a.zid=b.zid) as sitename,count(id) as count,sum(money) as money from pre_orders as a where addtime>'$lastday' and addtime<'$thtime' and zid>1 group by zid order by money desc limit {$limit}";
+	$sql = "select a.zid,(select b.sitename from pre_site as b where a.zid=b.zid) as sitename,count(id) as count,sum(money) as money from pre_orders as a where addtime>'$lastday' and addtime<'$thtime' and zid>1 and `status` != 4 group by zid order by money desc limit {$limit}";
 	$addstr = '已发放奖励';
 }else{
-	$sql = "select a.zid,(select b.sitename from pre_site as b where a.zid=b.zid) as sitename,count(id) as count,sum(money) as money from pre_orders as a where addtime>'$thtime' and zid>1 group by zid order by money desc limit {$limit}";
+	$sql = "select a.zid,(select b.sitename from pre_site as b where a.zid=b.zid) as sitename,count(id) as count,sum(money) as money from pre_orders as a where addtime>'$thtime' and zid>1 and `status` != 4 group by zid order by money desc limit {$limit}";
 	$addstr = '预计发放奖励';
 }
 
