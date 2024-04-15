@@ -24,8 +24,9 @@ ____
 > config.php (数据库配置文件)  
 > doc.php (对接文档)  
 
->Nginx静态规则:
-> rewrite ^/api/(\w+)\.do$ /api.php?act=$1 last;  
+[//]: # (>Nginx静态规则:)
+
+[//]: # (> rewrite ^/api/&#40;\w+&#41;\.do$ /api.php?act=$1 last;  )
 
 *特别强调*
 > 1、此版本为正式免费版本，其他的均属于二次开发。  

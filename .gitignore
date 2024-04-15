@@ -3,5 +3,6 @@
 /install/install.lock
 .htaccess
 nginx.htaccess
-config.php
 .env
+/assets/app_package
+config.php

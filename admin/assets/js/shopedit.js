@@ -38,6 +38,7 @@ function changeNum() {
     var min = parseInt($("#value").attr('min'));
     var max = parseInt($("#value").attr('max'));
     if (num == 0 || isNaN(price)) return false;
+
     $("input[name='price1']").val(getFloat(num * price, 2));
     $("input[name='price']").val(getFloat(num * price, 2));
     if (min == max || num >= max) {
@@ -164,7 +165,7 @@ $(document).ready(function () {
         if (type == 'jiuwu') {
             $("#goods_type").show();
             $("#goods_param").show();
-        } else if (type == 'kayixin' || type == 'zhike') {
+        } else if (type == 'kayixin' || type == 'zhike' || type === 'yile') {
             $("#goods_type").hide();
             $("#goods_param").show();
         } else {
@@ -266,12 +267,14 @@ $(document).ready(function () {
         }
         var type = $("select[name='shequ'] option:selected").attr('type'),
             classid = $("#goodsclass option:selected").val(),
-            el = $('#goodslist'),
-            shoplist = new Array();
+            el = $('#goodslist');
+
+        shoplist = new Array();
 
         if (type === 'kakayun') {
             //el.select2('destroy');
-            var ii = null;var _selectid;
+            var ii = null;
+            var _selectid;
             if (typeof (el.attr('default')) != 'undefined') {
                 _selectid = el.attr('default');
             }
@@ -311,7 +314,7 @@ $(document).ready(function () {
                             shoplist[item.id] = item;
                             if (_selectid && _selectid == item.id) {
                                 results.unshift({id: item.id, text: item.name});
-                                _ob.prepend(new Option(item.name , item.id , true , true)).trigger('change');
+                                _ob.prepend(new Option(item.name, item.id, true, true)).trigger('change');
                             } else {
                                 results.push({id: item.id, text: item.name});
                             }
@@ -413,26 +416,28 @@ $(document).ready(function () {
                     layer.close(ii);
                     if (data.code == 0) {
                         $("input[name='shopimg']").val(data.image);
-                        var paramname = data.paramname;
-                        var inputs = '';
-                        $.each(paramname.split('|'), function (i, v) {
-                            if (i == 0) {
-                                $("input[name='input']").val(v);
-                            } else {
-                                if (v == 'QQ空间说说ID') v = '说说ID';
-                                inputs += '|' + v;
+                        let inputs = [];
+
+                        if (data['buy_params'].length > 0) {
+                            let param_template = data.buy_params;
+                            for (let index in param_template) {
+                                if (index == 0) {
+                                    $('input[name="input"]').val(param_template[index].name);
+                                    $('input[name="goods_param"]').val(param_template[index].key);
+                                } else {
+                                    $('input[name="inputs"]').val(param_template[index].name);
+                                    $('input[name="goods_param"]').val($('input[name="goods_param"]').val() + '|' + param_template[index].key);
+                                }
                             }
-                        });
-                        $("input[name='inputs']").val(inputs.substr(1));
+                        }
+
                         $("#price").val(data.price);
-                        if ($("#value").val() == '' || $("#value").val() < data.limit_min || $("#value").val() > data.limit_max) $("#value").val(data.limit_min);
-                        $("#value").attr('min', data.limit_min);
-                        $("#value").attr('max', data.limit_max);
+                        if ($("#value").val() == '' || $("#value").val() < data.buy_min_limit || $("#value").val() > data.buy_max_limit) $("#value").val(data.buy_min_limit);
+                        $("#value").attr('min', data.buy_min_limit);
+                        $("#value").attr('max', data.buy_max_limit);
                         if ($("input[name='name']").val() == '' || isAdd) $("input[name='name']").val(data.name);
-                        if ($("textarea[name='desc']").val() == '' || isAdd) setDesc(data.desc);
-
-
-                        $("#GoodsInfo").html('<b>商品名称：</b><a style="color:white" href="http://' + $("select[name='shequ'] option:selected").attr('domain') + '/home/order/' + goodsid + '" target="_blank" rel="noreferrer">' + data.name + '</a><br/><b>商品简介：</b>' + data.desc + '<br/><b>社区商品售价：</b>' + data.price + ' 元<br/><b>最小下单数量：</b>' + data.limit_min + '<br/><b>最大下单数量：</b>' + data.limit_max);
+                        if ($("textarea[name='desc']").val() == '' || isAdd) setDesc(data.particulars);
+                        $("#GoodsInfo").html('<b>商品名称：</b><a style="color:white" href="http://' + $("select[name='shequ'] option:selected").attr('domain') + '/indexPc.html#/goods/' + goodsid + '" target="_blank" rel="noreferrer">' + data.name + '</a><br/><b>商品简介：</b>' + data.particulars + '<br/><b>社区商品售价：</b>' + data.price + ' 元<br/><b>最小下单数量：</b>' + data.buy_min_limit + '<br/><b>最大下单数量：</b>' + data.buy_max_limit);
                         $("#GoodsInfo").slideDown();
                         changeNum();
                     } else {

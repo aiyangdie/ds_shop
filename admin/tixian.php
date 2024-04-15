@@ -25,15 +25,17 @@ if($islogin==1){}else exit("<script language='javascript'>window.location.href='
 <div class="block-title clearfix">
 <h2>余额提现列表</h2><?php if($conf['fenzhan_daifu']>0){?><a class="btn btn-xs btn-info pull-right" href="javascript:config()">自动转账配置</a>&nbsp;<a class="btn btn-xs btn-primary pull-right" href="javascript:pl_config()">批量转账选中记录</a><?php }?>
 </div>
-<form onsubmit="return searchOrder()" method="GET" class="form-inline">
-	<input type="hidden" name="zid" value="<?php echo @$_GET['zid']?>">
-	<div class="form-group">
+<form onsubmit="return searchOrder(this)" method="GET" class="form-inline">
+
+    <div class="form-group">
 		<input type="text" placeholder="请输入要搜索的提现账号或者姓名" name="kw" class="form-control" style="min-width: 240px;">
+		<input type="text" placeholder="提现记录ID" name="id" class="form-control" style="width: 150px;">
+		<input type="text" placeholder="分站ID" name="zid" class="form-control" style="width: 150px;">
 		<select name="status" class="form-control"><option value="-1">全部状态</option><option value="0">未完成</option><option value="1">已完成</option><option value="2">失败</option></select>
 		<select name="type" class="form-control"><option value="-1">全部方式</option><option value="2">QQ钱包</option><option value="1">微信</option><option value="0">支付宝</option></select>
 	</div>
 	<button type="submit" id="search_submit" class="btn btn-primary">搜索</button>&nbsp;
-	<a href="javascript:clearOrder()" class="btn btn-default" title="刷新提现列表"><i class="fa fa-refresh"></i></a>
+	<button type="reset" onclick="listTable('start');" class="btn btn-default btn-icon" title="重置搜索条件"><i class="fa fa-refresh"></i></button>
 </form>
 <div id="listTable"></div>
     </div>

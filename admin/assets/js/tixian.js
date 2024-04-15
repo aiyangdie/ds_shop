@@ -25,22 +25,9 @@ function listTable(query){
 		}
 	});
 }
-function searchOrder(){
-	var kw=$("input[name='kw']").val();
-	var type=$("select[name='type']").val();
-	var status=$("select[name='status']").val();
-	if(kw!=''){
-		listTable('kw='+kw+'&type='+type+'&status='+status);
-	}else{
-		listTable('type='+type+'&status='+status);
-	}
+function searchOrder(e){
+	listTable($(e).serialize());
 	return false;
-}
-function clearOrder(){
-	$("input[name='kw']").val('');
-	$("select[name='type']").val(-1);
-	$("select[name='status']").val(-1);
-	listTable('start')
 }
 function inputInfo(id) {
 	var ii = layer.load(2, {shade:[0.1,'#fff']});
@@ -88,7 +75,7 @@ function saveInfo(id) {
 				layer.alert(data.msg);
 			}
 			$('#save').val('保存');
-		} 
+		}
 	});
 }
 function skimg(zid){
@@ -120,7 +107,7 @@ function setfail(id, money) {
 				}else{
 					layer.alert(data.msg);
 				}
-			} 
+			}
 		});
 	}, function(){
 	  layer.close(confirmobj);
@@ -144,7 +131,7 @@ function delItem(id) {
 				}else{
 					layer.alert(data.msg);
 				}
-			} 
+			}
 		});
 	}, function(){
 	  layer.close(confirmobj);
@@ -165,7 +152,7 @@ function operation(id,op) {
 			}else{
 				layer.alert(data.msg);
 			}
-		} 
+		}
 	});
 }
 function setResult(id) {

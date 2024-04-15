@@ -14,8 +14,18 @@ class AppCreate{
 	public $taskid;
 
 	function __construct($key){
-		$this->key = $key;
+        $this->key = $key;
+        $this->setApiRecourse();
 	}
+
+    function setApiRecourse()
+    {
+        /** @var array<string, string> $conf  */
+        global $conf;
+        if (! empty($conf['appcreate_source'])) {
+            $this->apiurl = $conf['appcreate_source'];
+        }
+    }
 
 	//上传图片
 	public function uploadimg($path){
