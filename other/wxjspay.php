@@ -58,7 +58,7 @@ if($_GET['d']==1){
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta charset="utf-8" />
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
-    <link href="//cdn.staticfile.org/ionic/1.3.2/css/ionic.min.css" rel="stylesheet" />
+    <link href="<?php echo $cdnpublic?>ionic/1.3.2/css/ionic.min.css" rel="stylesheet" />
 </head>
 <body>
 <div class="bar bar-header bar-light" align-title="center">
@@ -68,8 +68,8 @@ if($_GET['d']==1){
 <div class="text-center" style="color: #a09ee5;">
 <i class="icon ion-information-circled" style="font-size: 80px;"></i><br>
 <span>正在跳转...</span>
-<script src="//cdn.staticfile.org/jquery/1.12.4/jquery.min.js"></script>
-<script src="//cdn.staticfile.org/layer/3.1.1/layer.min.js"></script>
+<script src="<?php echo $cdnpublic?>jquery/1.12.4/jquery.min.js"></script>
+<script src="<?php echo $cdnpublic?>layer/3.1.1/layer.min.js"></script>
 <script>
 	document.body.addEventListener('touchmove', function (event) {
 		event.preventDefault();
@@ -82,6 +82,7 @@ if($_GET['d']==1){
 			<?php echo $jsApiParameters; ?>,
 			function(res){
 				if(res.err_msg == "get_brand_wcpay_request:ok" ) {
+                    layer.msg('支付成功，正在跳转中...', {icon: 16,shade: 0.1,time: 15000});
 					loadmsg();
 				}
 				//WeixinJSBridge.log(res.err_msg);
@@ -121,24 +122,16 @@ if($_GET['d']==1){
             type: "GET",
             dataType: "json",
             url: "getshop.php",
-            timeout: 10000, //ajax请求超时时间10s
-            data: {type: "wxpay", trade_no: "<?php echo $row['trade_no']?>"}, //post数据
-            success: function (data, textStatus) {
-                //从服务器得到数据，显示数据并继续查询
+            data: {trade_no: "<?php echo $row['trade_no']?>"},
+            success: function (data) {
                 if (data.code == 1) {
-					layer.msg('支付成功，正在跳转中...', {icon: 16,shade: 0.1,time: 15000});
 					window.location.href=<?php echo $redirect_url?>;
                 }else{
-                    setTimeout("loadmsg()", 2000);
+                    setTimeout("loadmsg()", 1500);
                 }
             },
-            //Ajax请求超时，继续查询
-            error: function (XMLHttpRequest, textStatus, errorThrown) {
-                if (textStatus == "timeout") {
-                    setTimeout("loadmsg()", 1000);
-                } else { //异常
-                    setTimeout("loadmsg()", 4000);
-                }
+            error: function () {
+                setTimeout("loadmsg()", 2000);
             }
         });
     }

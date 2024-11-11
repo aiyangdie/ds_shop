@@ -51,3 +51,13 @@ function showalert($msg,$status,$orderid=null,$tid=0){
 	else $link = '../?buyok=1';
 	echo '<meta charset="utf-8"/><script>alert("'.$msg.'");window.location.href="'.$link.'";</script>';
 }
+
+if($conf['cdnpublic']==1){
+	$cdnpublic = '//lib.baomitu.com/';
+}elseif($conf['cdnpublic']==2){
+	$cdnpublic = 'https://cdnjs.snrat.com/ajax/libs/';
+}elseif($conf['cdnpublic']==4){
+	$cdnpublic = '//lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/';
+}else{
+	$cdnpublic = 'https://s4.zstatic.net/ajax/libs/';
+}

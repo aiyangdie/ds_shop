@@ -85,9 +85,9 @@ if($result["result_code"]=='SUCCESS'){
 </div>
 </div>
 </div>
-<script src="//cdn.staticfile.org/jquery/1.12.4/jquery.min.js"></script>
-<script src="//cdn.staticfile.org/jquery.qrcode/1.0/jquery.qrcode.min.js"></script>
-<script src="//cdn.staticfile.org/layer/3.1.1/layer.min.js"></script>
+<script src="<?php echo $cdnpublic?>jquery/1.12.4/jquery.min.js"></script>
+<script src="<?php echo $cdnpublic?>jquery.qrcode/1.0/jquery.qrcode.min.js"></script>
+<script src="<?php echo $cdnpublic?>layer/3.1.1/layer.min.js"></script>
 <script>
     $('#qrcode').qrcode({
         text: "<?php echo $code_url?>",
@@ -109,30 +109,22 @@ if($result["result_code"]=='SUCCESS'){
             });
         }
     });
-    // 检查是否支付完成
     function loadmsg() {
         $.ajax({
             type: "GET",
             dataType: "json",
             url: "getshop.php",
-            timeout: 10000, //ajax请求超时时间10s
-            data: {type: "wxpay", trade_no: "<?php echo $row['trade_no']?>"}, //post数据
-            success: function (data, textStatus) {
-                //从服务器得到数据，显示数据并继续查询
+            data: {trade_no: "<?php echo $row['trade_no']?>"},
+            success: function (data) {
                 if (data.code == 1) {
 					layer.msg('支付成功，正在跳转中...', {icon: 16,shade: 0.1,time: 15000});
 					setTimeout(window.location.href=data.backurl, 1000);
                 }else{
-                    setTimeout("loadmsg()", 3000);
+                    setTimeout("loadmsg()", 2000);
                 }
             },
-            //Ajax请求超时，继续查询
-            error: function (XMLHttpRequest, textStatus, errorThrown) {
-                if (textStatus == "timeout") {
-                    setTimeout("loadmsg()", 1000);
-                } else { //异常
-                    setTimeout("loadmsg()", 4000);
-                }
+            error: function () {
+                setTimeout("loadmsg()", 2000);
             }
         });
     }

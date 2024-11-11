@@ -14,7 +14,7 @@ if(!$row)exit('该订单号不存在，请返回来源地重新发起请求！')
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta charset="utf-8" />
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
-    <link href="//cdn.staticfile.org/ionic/1.3.2/css/ionic.min.css" rel="stylesheet" />
+    <link href="<?php echo $cdnpublic?>ionic/1.3.2/css/ionic.min.css" rel="stylesheet" />
 </head>
 <body>
 <div class="bar bar-header bar-light" align-title="center">
@@ -24,8 +24,8 @@ if(!$row)exit('该订单号不存在，请返回来源地重新发起请求！')
 <div class="text-center" style="color: #a09ee5;">
 <i class="icon ion-information-circled" style="font-size: 80px;"></i><br>
 <span>正在检测付款结果...</span>
-<script src="//cdn.staticfile.org/jquery/1.12.4/jquery.min.js"></script>
-<script src="//cdn.staticfile.org/layer/3.1.1/layer.min.js"></script>
+<script src="<?php echo $cdnpublic?>jquery/1.12.4/jquery.min.js"></script>
+<script src="<?php echo $cdnpublic?>layer/3.1.1/layer.min.js"></script>
 <script>
 	document.body.addEventListener('touchmove', function (event) {
 		event.preventDefault();
@@ -36,24 +36,17 @@ if(!$row)exit('该订单号不存在，请返回来源地重新发起请求！')
             type: "GET",
             dataType: "json",
             url: "getshop.php",
-            timeout: 10000, //ajax请求超时时间10s
-            data: {type: "wxpay", trade_no: "<?php echo $trade_no?>"}, //post数据
-            success: function (data, textStatus) {
-                //从服务器得到数据，显示数据并继续查询
+            data: {trade_no: "<?php echo $row['trade_no']?>"},
+            success: function (data) {
                 if (data.code == 1) {
-                    layer.msg('支付成功，正在跳转中...', {icon: 16,shade: 0.1,time: 15000});
+					layer.msg('支付成功，正在跳转中...', {icon: 16,shade: 0.1,time: 15000});
 					setTimeout(window.location.href=data.backurl, 1000);
                 }else{
-                    setTimeout("loadmsg()", 2000);
+                    setTimeout("loadmsg()", 1500);
                 }
             },
-            //Ajax请求超时，继续查询
-            error: function (XMLHttpRequest, textStatus, errorThrown) {
-                if (textStatus == "timeout") {
-                    setTimeout("loadmsg()", 1000);
-                } else { //异常
-                    setTimeout("loadmsg()", 3000);
-                }
+            error: function () {
+                setTimeout("loadmsg()", 2000);
             }
         });
     }

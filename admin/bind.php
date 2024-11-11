@@ -10,11 +10,11 @@ $typename = $type=='qq'?'QQ':'微信';
   <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
   <meta name="renderer" content="webkit"/>
   <title>扫码登录</title>
-  <link href="//cdn.staticfile.org/twitter-bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet"/>
-  <script src="//cdn.staticfile.org/jquery/1.12.4/jquery.min.js"></script>
+  <link href="//lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/twitter-bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet"/>
+  <script src="//lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/jquery/1.12.4/jquery.min.js"></script>
   <!--[if lt IE 9]>
-    <script src="//cdn.staticfile.org/html5shiv/3.7.3/html5shiv.min.js"></script>
-    <script src="//cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+    <script src="//lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <script src="//lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/respond.js/1.4.2/respond.min.js"></script>
   <![endif]-->
 </head>
 <body>
@@ -31,8 +31,8 @@ $typename = $type=='qq'?'QQ':'微信';
         </div>
 	</div>
 <script>var isbind = true;var bindtype = '<?php echo $type?>';var bindtypename = '<?php echo $typename?>';</script>
-<script src="//cdn.staticfile.org/jquery/1.12.4/jquery.min.js"></script>
-<script src="//cdn.staticfile.org/jquery.qrcode/1.0/jquery.qrcode.min.js"></script>
+<script src="//lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/jquery/1.12.4/jquery.min.js"></script>
+<script src="//lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/jquery.qrcode/1.0/jquery.qrcode.min.js"></script>
 <script src="./assets/js/qrlogin.js"></script>
 </body>
 </html>

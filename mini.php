@@ -3,16 +3,6 @@ $is_defend=true;
 include("./includes/common.php");
 $qq=isset($_GET['qq'])?htmlspecialchars(strip_tags(trim($_GET['qq']))):null;
 
-if($conf['cdnpublic']==1){
-	$cdnpublic = '//lib.baomitu.com/';
-}elseif($conf['cdnpublic']==2){
-	$cdnpublic = '//cdn.bootcss.com/';
-}elseif($conf['cdnpublic']==4){
-	$cdnpublic = '//s1.pstatp.com/cdn/expire-1-M/';
-}else{
-	$cdnpublic = '//cdn.staticfile.org/';
-}
-
 $addsalt=md5(mt_rand(0,999).time());
 $_SESSION['addsalt']=$addsalt;
 $x = new \lib\hieroglyphy();

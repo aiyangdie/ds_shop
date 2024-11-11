@@ -8,14 +8,14 @@ $scriptpath = substr($scriptpath, 0, strrpos($scriptpath, '/'));
 $siteurl    = (is_https() ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . $scriptpath . '/';
 
 $admin_cdnpublic = 4;
-if ($admin_cdnpublic == 1) {
-    $cdnpublic = '//lib.baomitu.com/';
-} elseif ($admin_cdnpublic == 2) {
-    $cdnpublic = 'https://cdn.bootcdn.net/ajax/libs/';
-} elseif ($admin_cdnpublic == 4) {
-    $cdnpublic = '//s1.pstatp.com/cdn/expire-1-M/';
-} else {
-    $cdnpublic = '//cdn.staticfile.org/';
+if($admin_cdnpublic==1){
+	$cdnpublic = '//lib.baomitu.com/';
+}elseif($admin_cdnpublic==2){
+	$cdnpublic = 'https://s4.zstatic.net/ajax/libs/';
+}elseif($admin_cdnpublic==4){
+	$cdnpublic = '//lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/';
+}else{
+	$cdnpublic = '//mirrors.sustech.edu.cn/cdnjs/ajax/libs/';
 }
 ?>
 <!DOCTYPE html>

@@ -95,7 +95,6 @@ if (IS_AJAX) {
 
 $title = 'APP列表';
 include "head.php";
-!defined('ASSET_URL') && define('ASSET_URL', (isset($cdnserver) ? $cdnserver : $cdnpublic));
 
 ?>
 <div class="col-sm-12 col-md-12 " id="page-app">
@@ -264,8 +263,8 @@ include "head.php";
         </div>
     </div>
 </div>
-<script src="../assets/vendors/vue@2.6.3/dist/vue.min.js"></script>
-<script src="<?php echo ASSET_URL ?>layer/3.1.1/layer.js"></script>
+<script src="<?php echo $cdnpublic ?>vue/2.6.14/vue.min.js"></script>
+<script src="<?php echo $cdnpublic ?>layer/3.1.1/layer.js"></script>
 
 <?php
 require './comments/pagination.php';

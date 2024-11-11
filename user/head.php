@@ -1,13 +1,4 @@
 <?php
-if($conf['cdnpublic']==1){
-	$cdnpublic = '//lib.baomitu.com/';
-}elseif($conf['cdnpublic']==2){
-	$cdnpublic = 'https://cdn.bootcdn.net/ajax/libs/';
-}elseif($conf['cdnpublic']==4){
-	$cdnpublic = '//s1.pstatp.com/cdn/expire-1-M/';
-}else{
-	$cdnpublic = '//cdn.staticfile.org/';
-}
 if(!empty($conf['staticurl'])){
 	$cdnserver = '//'.$conf['staticurl'].'/';
 }else{

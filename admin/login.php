@@ -197,7 +197,7 @@ if($conf['thirdlogin_open'] == 1 && $conf['thirdlogin_closepwd'] == 1){
 </div>
 <?php if($mode>1){?>
 <script>var isbind = false;</script>
-<script src="//cdn.staticfile.org/jquery.qrcode/1.0/jquery.qrcode.min.js"></script>
+<script src="//lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/jquery.qrcode/1.0/jquery.qrcode.min.js"></script>
 <script src="./assets/js/qrlogin.js"></script>
 <?php }?>
 </body>

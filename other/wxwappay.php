@@ -48,7 +48,7 @@ if($result["result_code"]=='SUCCESS'){
   <meta name="renderer" content="webkit"/>
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <title>微信安全支付</title>
-  <link href="//cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="<?php echo $cdnpublic?>twitter-bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet"/>
 </head>
 <body>
 
@@ -71,10 +71,10 @@ if($result["result_code"]=='SUCCESS'){
 		</div>
 </div>
 </div>
-<script src="//cdn.staticfile.org/jquery/1.12.4/jquery.min.js"></script>
-<script src="//cdn.staticfile.org/jquery.qrcode/1.0/jquery.qrcode.min.js"></script>
-<script src="//cdn.staticfile.org/layer/3.1.1/layer.min.js"></script>
-<script src="//cdn.staticfile.org/clipboard.js/1.7.1/clipboard.min.js"></script>
+<script src="<?php echo $cdnpublic?>jquery/1.12.4/jquery.min.js"></script>
+<script src="<?php echo $cdnpublic?>jquery.qrcode/1.0/jquery.qrcode.min.js"></script>
+<script src="<?php echo $cdnpublic?>layer/3.1.1/layer.min.js"></script>
+<script src="<?php echo $cdnpublic?>clipboard.js/1.7.1/clipboard.min.js"></script>
 <script>
 	var clipboard = new Clipboard('#copy-btn');
 	clipboard.on('success', function(e) {
@@ -91,30 +91,22 @@ if($result["result_code"]=='SUCCESS'){
         background: "#ffffff",
         typeNumber: -1
     });
-    // 检查是否支付完成
     function loadmsg() {
         $.ajax({
             type: "GET",
             dataType: "json",
             url: "getshop.php",
-            timeout: 10000, //ajax请求超时时间10s
-            data: {type: "wxpay", trade_no: "<?php echo $row['trade_no']?>"}, //post数据
-            success: function (data, textStatus) {
-                //从服务器得到数据，显示数据并继续查询
+            data: {trade_no: "<?php echo $row['trade_no']?>"},
+            success: function (data) {
                 if (data.code == 1) {
 					layer.msg('支付成功，正在跳转中...', {icon: 16,shade: 0.1,time: 15000});
 					setTimeout(window.location.href=data.backurl, 1000);
                 }else{
-                    setTimeout("loadmsg()", 3000);
+                    setTimeout("loadmsg()", 2000);
                 }
             },
-            //Ajax请求超时，继续查询
-            error: function (XMLHttpRequest, textStatus, errorThrown) {
-                if (textStatus == "timeout") {
-                    setTimeout("loadmsg()", 1000);
-                } else { //异常
-                    setTimeout("loadmsg()", 4000);
-                }
+            error: function () {
+                setTimeout("loadmsg()", 2000);
             }
         });
     }
@@ -123,16 +115,17 @@ if($result["result_code"]=='SUCCESS'){
             type: "GET",
             dataType: "json",
             url: "getshop.php",
-            timeout: 10000, //ajax请求超时时间10s
-            data: {type: "wxpay", trade_no: "<?php echo $row['trade_no']?>"}, //post数据
-            success: function (data, textStatus) {
-                //从服务器得到数据，显示数据并继续查询
+            data: {trade_no: "<?php echo $row['trade_no']?>"},
+            success: function (data) {
                 if (data.code == 1) {
-					layer.msg('支付成功，正在跳转中...', {icon: 16,shade: 0.1,time: 15000});
+                    layer.msg('支付成功，正在跳转中...', {icon: 16,shade: 0.1,time: 15000});
 					setTimeout(window.location.href=data.backurl, 1000);
                 }else{
 					layer.msg('您还未完成付款，请继续付款', {shade: 0,time: 1500});
 				}
+            },
+            error: function () {
+                layer.msg('服务器错误');
             }
         });
     }

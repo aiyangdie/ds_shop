@@ -7,7 +7,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta charset="utf-8" />
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
-    <link href="//cdn.staticfile.org/ionic/1.3.2/css/ionic.min.css" rel="stylesheet" />
+    <link href="//lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/ionic/1.3.2/css/ionic.min.css" rel="stylesheet" />
 </head>
 <body>
 <div class="bar bar-header bar-light" align-title="center">
