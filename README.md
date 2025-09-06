@@ -45,5 +45,5 @@ __使用协议__
 * 我爱支付，让交易更有价值 : https://www.52zhifu.com/
   
 ---- 
-> [QQ交流群②]  https://jq.qq.com/?_wv=1027&k=RGnyIRu9  
+> [QQ交流群][2025-09-06]  http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=_JJpOEVZBG4rcH_5laqC54CMJS5Wmwhf&authKey=Zxqa%2Fe2e9FdnnRcpCJGPfH%2F8Jw%2Bh6auIMmuR0EunyVgM6qP4JfsfCQpgHjQ4BQuw&noverify=0&group_code=811567663
 > [接口助手]  https://open-api.qqzwb.com/  

@@ -7,7 +7,7 @@ $scriptpath = substr($scriptpath, 0, strrpos($scriptpath, '/'));
 $scriptpath = substr($scriptpath, 0, strrpos($scriptpath, '/'));
 $siteurl    = (is_https() ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . $scriptpath . '/';
 
-$admin_cdnpublic = 4;
+$admin_cdnpublic = 2;
 if($admin_cdnpublic==1){
 	$cdnpublic = '//lib.baomitu.com/';
 }elseif($admin_cdnpublic==2){
