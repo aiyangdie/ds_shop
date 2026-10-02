@@ -37,15 +37,29 @@ class Tools
             $this->fn('get_order', '查看单个订单详情', array(
                 'id' => array('type' => 'integer', 'description' => '订单ID'),
             ), array('id')),
-            $this->fn('set_order_status', '修改订单状态（0未处理1已完成2处理中3异常4已退款；传5为删除订单）', array(
+            $this->fn('set_order_status', '修改单个订单状态。status可用数字或中文：0未处理 1已完成 2处理中 3异常 4已退款 5删除', array(
                 'id' => array('type' => 'integer', 'description' => '订单ID'),
-                'status' => array('type' => 'integer', 'description' => '目标状态'),
+                'status' => array('type' => 'string', 'description' => '目标状态，数字或中文均可'),
                 'result' => array('type' => 'string', 'description' => '处理结果备注，可选'),
             ), array('id', 'status')),
-            $this->fn('refund_order', '对未处理/异常订单退款到用户余额（主站游客订单需人工退款）', array(
+            $this->fn('batch_set_order_status', '批量修改订单状态，用于处理一批未处理/异常单', array(
+                'ids' => array(
+                    'type' => 'array',
+                    'description' => '订单ID数组',
+                    'items' => array('type' => 'integer'),
+                ),
+                'status' => array('type' => 'string', 'description' => '目标状态，数字或中文'),
+                'result' => array('type' => 'string', 'description' => '统一备注，可选'),
+                'confirm' => array('type' => 'boolean', 'description' => '必须为 true 才执行'),
+            ), array('ids', 'status', 'confirm')),
+            $this->fn('refund_order', '对未处理或异常订单退款到用户余额（游客订单改状态后仍需人工打款）', array(
                 'id' => array('type' => 'integer', 'description' => '订单ID'),
                 'money' => array('type' => 'number', 'description' => '退款金额，不传则全额'),
                 'confirm' => array('type' => 'boolean', 'description' => '必须为 true 才执行退款'),
+            ), array('id', 'confirm')),
+            $this->fn('redo_dock_order', '对对接类订单重新提交到货源（重新下单）', array(
+                'id' => array('type' => 'integer', 'description' => '订单ID'),
+                'confirm' => array('type' => 'boolean', 'description' => '必须为 true'),
             ), array('id', 'confirm')),
             $this->fn('list_goods', '搜索/列出商品', array(
                 'keyword' => array('type' => 'string', 'description' => '商品名关键词，可空'),
@@ -87,7 +101,11 @@ class Tools
                 'active' => array('type' => 'integer', 'description' => '默认1上架'),
             ), array('name', 'cid', 'price')),
             $this->fn('set_goods_shelf', '批量上下架/开关商品', array(
-                'tids' => array('type' => 'array', 'description' => '商品ID数组', 'items' => array('type' => 'integer')),
+                'tids' => array(
+                    'type' => 'array',
+                    'description' => '商品ID数组',
+                    'items' => array('type' => 'integer'),
+                ),
                 'active' => array('type' => 'integer', 'description' => '1上架0下架，与close二选一'),
                 'close' => array('type' => 'integer', 'description' => '1关闭0开启'),
             ), array('tids')),
@@ -115,10 +133,18 @@ class Tools
                 'confirm' => array('type' => 'boolean', 'description' => '必须 true'),
             ), array('zid', 'money', 'confirm')),
             $this->fn('get_config', '读取站点配置项（可指定keys，不传返回常用项）', array(
-                'keys' => array('type' => 'array', 'description' => '配置键名数组', 'items' => array('type' => 'string')),
+                'keys' => array(
+                    'type' => 'array',
+                    'description' => '配置键名数组',
+                    'items' => array('type' => 'string'),
+                ),
             )),
             $this->fn('update_config', '更新白名单内的站点配置（如 sitename/kfqq/anounce 等）', array(
-                'items' => array('type' => 'object', 'description' => '键值对对象，例如 {"sitename":"新店名"}'),
+                'items' => array(
+                    'type' => 'object',
+                    'description' => '键值对对象，例如 {"sitename":"新店名"}',
+                    'additionalProperties' => array('type' => 'string'),
+                ),
             ), array('items')),
             $this->fn('list_shequ', '列出对接货源站点', array()),
             $this->fn('supplier_pull_goods', '从同系统对接站点拉取货源商品列表', array(
@@ -129,16 +155,24 @@ class Tools
 
     private function fn($name, $desc, $props, $required = array())
     {
+        // DeepSeek/OpenAI 要求 properties 必须是 JSON object；PHP 空数组会编成 [] 导致 400
+        $properties = $props;
+        if (!is_array($properties) || count($properties) === 0) {
+            $properties = new \stdClass();
+        }
+        $parameters = array(
+            'type' => 'object',
+            'properties' => $properties,
+        );
+        if (is_array($required) && count($required) > 0) {
+            $parameters['required'] = array_values($required);
+        }
         return array(
             'type' => 'function',
             'function' => array(
                 'name' => $name,
                 'description' => $desc,
-                'parameters' => array(
-                    'type' => 'object',
-                    'properties' => $props,
-                    'required' => $required,
-                ),
+                'parameters' => $parameters,
             ),
         );
     }
@@ -161,8 +195,12 @@ class Tools
                     return $this->getOrder($args);
                 case 'set_order_status':
                     return $this->setOrderStatus($args);
+                case 'batch_set_order_status':
+                    return $this->batchSetOrderStatus($args);
                 case 'refund_order':
                     return $this->refundOrder($args);
+                case 'redo_dock_order':
+                    return $this->redoDockOrder($args);
                 case 'list_goods':
                     return $this->listGoods($args);
                 case 'get_goods':
@@ -220,12 +258,51 @@ class Tools
         );
     }
 
+    private function orderStatusText($status)
+    {
+        $map = array(
+            0 => '未处理',
+            1 => '已完成',
+            2 => '处理中',
+            3 => '异常',
+            4 => '已退款',
+            5 => '删除',
+        );
+        $s = intval($status);
+        return isset($map[$s]) ? $map[$s] : ('状态' . $s);
+    }
+
+    private function parseOrderStatus($status)
+    {
+        if (is_numeric($status)) {
+            return intval($status);
+        }
+        $s = trim(strval($status));
+        $map = array(
+            '未处理' => 0, '待处理' => 0,
+            '已完成' => 1, '完成' => 1,
+            '处理中' => 2, '进行中' => 2,
+            '异常' => 3,
+            '已退款' => 4, '退款' => 4,
+            '删除' => 5,
+        );
+        return isset($map[$s]) ? $map[$s] : -1;
+    }
+
+    private function decorateOrderRow($row)
+    {
+        if (!is_array($row)) return $row;
+        $row['status_text'] = $this->orderStatusText(isset($row['status']) ? $row['status'] : 0);
+        return $row;
+    }
+
     private function searchOrders($args)
     {
         $limit = isset($args['limit']) ? min(50, max(1, intval($args['limit']))) : 20;
         $where = '1=1';
         if (isset($args['status']) && $args['status'] !== '' && $args['status'] !== null) {
-            $where .= ' AND status=' . intval($args['status']);
+            $st = is_numeric($args['status']) ? intval($args['status']) : $this->parseOrderStatus($args['status']);
+            if ($st >= 0) $where .= ' AND status=' . $st;
         }
         if (!empty($args['tid'])) {
             $where .= ' AND tid=' . intval($args['tid']);
@@ -235,7 +312,11 @@ class Tools
             $where .= " AND (input LIKE '%$kw%' OR input2 LIKE '%$kw%' OR tradeno LIKE '%$kw%' OR result LIKE '%$kw%')";
         }
         $rows = $this->DB->getAll("SELECT id,tid,zid,input,value,status,money,cost,addtime,tradeno FROM pre_orders WHERE $where ORDER BY id DESC LIMIT $limit");
-        return array('ok' => true, 'count' => count($rows), 'data' => $rows);
+        $data = array();
+        foreach ($rows as $row) {
+            $data[] = $this->decorateOrderRow($row);
+        }
+        return array('ok' => true, 'count' => count($data), 'data' => $data);
     }
 
     private function getOrder($args)
@@ -244,19 +325,19 @@ class Tools
         $row = $this->DB->getRow("SELECT * FROM pre_orders WHERE id='$id' LIMIT 1");
         if (!$row) return array('ok' => false, 'error' => '订单不存在');
         $tool = $this->DB->getRow("SELECT tid,name,price,is_curl,shequ,goods_id FROM pre_tools WHERE tid='{$row['tid']}' LIMIT 1");
-        return array('ok' => true, 'order' => $row, 'goods' => $tool);
+        return array('ok' => true, 'order' => $this->decorateOrderRow($row), 'goods' => $tool);
     }
 
     private function setOrderStatus($args)
     {
         $id = intval(isset($args['id']) ? $args['id'] : 0);
-        $status = intval(isset($args['status']) ? $args['status'] : -1);
+        $status = $this->parseOrderStatus(isset($args['status']) ? $args['status'] : -1);
         if ($id <= 0) return array('ok' => false, 'error' => '无效订单ID');
         if ($status === 5) {
             $ok = $this->DB->exec("DELETE FROM pre_orders WHERE id='$id'");
             return array('ok' => $ok !== false, 'msg' => $ok !== false ? '订单已删除' : $this->DB->error());
         }
-        if ($status < 0 || $status > 4) return array('ok' => false, 'error' => '状态必须是0-4或5(删除)');
+        if ($status < 0 || $status > 4) return array('ok' => false, 'error' => '状态无效，请用未处理/已完成/处理中/异常/已退款/删除');
         $result = isset($args['result']) ? addslashes($args['result']) : null;
         if ($result !== null && $result !== '') {
             $sql = "UPDATE pre_orders SET status='$status', result='$result' WHERE id='$id'";
@@ -264,7 +345,60 @@ class Tools
             $sql = "UPDATE pre_orders SET status='$status', result=NULL WHERE id='$id'";
         }
         $ok = $this->DB->exec($sql);
-        return array('ok' => $ok !== false, 'msg' => $ok !== false ? '订单状态已更新为 ' . $status : $this->DB->error());
+        return array(
+            'ok' => $ok !== false,
+            'msg' => $ok !== false ? ('订单已更新为' . $this->orderStatusText($status)) : $this->DB->error(),
+            'status' => $status,
+            'status_text' => $this->orderStatusText($status),
+        );
+    }
+
+    private function batchSetOrderStatus($args)
+    {
+        if (empty($args['confirm'])) {
+            return array('ok' => false, 'error' => '批量改状态需 confirm=true 确认');
+        }
+        $ids = isset($args['ids']) ? $args['ids'] : array();
+        if (!is_array($ids) || !$ids) return array('ok' => false, 'error' => 'ids 不能为空');
+        $status = $this->parseOrderStatus(isset($args['status']) ? $args['status'] : -1);
+        if ($status < 0 || $status > 5) return array('ok' => false, 'error' => '状态无效');
+        $result = isset($args['result']) ? strval($args['result']) : '';
+        $okIds = array();
+        $fail = array();
+        foreach ($ids as $id) {
+            $ret = $this->setOrderStatus(array(
+                'id' => intval($id),
+                'status' => $status,
+                'result' => $result,
+            ));
+            if (!empty($ret['ok'])) $okIds[] = intval($id);
+            else $fail[] = array('id' => intval($id), 'error' => isset($ret['error']) ? $ret['error'] : (isset($ret['msg']) ? $ret['msg'] : '失败'));
+        }
+        return array(
+            'ok' => count($fail) === 0,
+            'msg' => '成功 ' . count($okIds) . ' 笔，失败 ' . count($fail) . ' 笔，目标状态：' . $this->orderStatusText($status),
+            'success_ids' => $okIds,
+            'failed' => $fail,
+        );
+    }
+
+    private function redoDockOrder($args)
+    {
+        if (empty($args['confirm'])) {
+            return array('ok' => false, 'error' => '重新对接需 confirm=true 确认');
+        }
+        $id = intval(isset($args['id']) ? $args['id'] : 0);
+        if ($id <= 0) return array('ok' => false, 'error' => '无效订单ID');
+        if (!function_exists('do_goods')) {
+            return array('ok' => false, 'error' => '系统未加载对接下单函数 do_goods');
+        }
+        $result = do_goods($id);
+        $ok = is_string($result) && (strpos($result, '成功') !== false);
+        return array(
+            'ok' => $ok,
+            'msg' => is_string($result) ? $result : json_encode($result, JSON_UNESCAPED_UNICODE),
+            'id' => $id,
+        );
     }
 
     private function refundOrder($args)

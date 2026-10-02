@@ -28,10 +28,12 @@ class Client
             throw new \Exception('请先在「AI模型配置」中填写 API Base 与 API Key');
         }
         $url = $this->apiBase . '/chat/completions';
-        $body = json_encode($payload, JSON_UNESCAPED_UNICODE);
+        $body = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         if ($body === false) {
             throw new \Exception('请求体 JSON 编码失败');
         }
+        // 兜底：空 properties 若被编成 []，改成 {}
+        $body = preg_replace('/"properties"\s*:\s*\[\s*\]/', '"properties":{}', $body);
 
         $ch = curl_init($url);
         curl_setopt_array($ch, array(
