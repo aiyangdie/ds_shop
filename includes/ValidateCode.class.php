@@ -10,10 +10,25 @@ private $charset = 'abcdefghkmnprstuvwxyzABCDEFGHKMNPRSTUVWXYZ23456789';    //�
     private $font;                                //指定的字体
     private $fontsize = 20;                //指定字体大小
     private $fontcolor;                        //指定字体颜色
+    private $use_ttf = false;             //是否使用 TTF 字体
 
     //构造方法初始化
     public function __construct() {
-        $this->font = ROOT_PATH.'/../assets/font/elephant.ttf';
+        $candidates = array(
+            (defined('ROOT_PATH') ? ROOT_PATH : __DIR__) . '/../assets/font/elephant.ttf',
+            dirname(__DIR__) . '/assets/font/elephant.ttf',
+            'C:/Windows/Fonts/arial.ttf',
+            'C:/Windows/Fonts/Arial.ttf',
+            'C:/Windows/Fonts/consola.ttf',
+            'C:/Windows/Fonts/simhei.ttf',
+        );
+        foreach ($candidates as $font) {
+            if ($font && is_file($font) && function_exists('imagettftext')) {
+                $this->font = $font;
+                $this->use_ttf = true;
+                break;
+            }
+        }
     }
 
     //生成随机码
@@ -32,23 +47,31 @@ private $charset = 'abcdefghkmnprstuvwxyzABCDEFGHKMNPRSTUVWXYZ23456789';    //�
     }
 
     //生成文字
-    private function createFont() {    
+    private function createFont() {
         $_x = $this->width / $this->codelen;
         for ($i=0;$i<$this->codelen;$i++) {
-            $this->fontcolor = imagecolorallocate($this->img,mt_rand(0,156),mt_rand(0,156),mt_rand(0,156));
-            imagettftext($this->img,$this->fontsize,mt_rand(-30,30),$_x*$i+mt_rand(1,5),$this->height / 1.4,$this->fontcolor,$this->font,$this->code[$i]);
+            $this->fontcolor = imagecolorallocate($this->img,mt_rand(0,120),mt_rand(0,120),mt_rand(0,120));
+            $drawn = false;
+            if ($this->use_ttf) {
+                $box = @imagettftext($this->img,$this->fontsize,mt_rand(-20,20),(int)($_x*$i+mt_rand(5,10)),(int)($this->height / 1.4),$this->fontcolor,$this->font,$this->code[$i]);
+                $drawn = ($box !== false);
+            }
+            if (!$drawn) {
+                // TTF 失败时回退内置字体，保证字符可见
+                imagestring($this->img, 5, (int)($_x*$i + 12), (int)($this->height/2 - 8), $this->code[$i], $this->fontcolor);
+            }
         }
     }
 
-    //生成线条、雪花
+    //生成线条、雪花（减少干扰，保证可读）
     private function createLine() {
-        for ($i=0;$i<6;$i++) {
-            $color = imagecolorallocate($this->img,mt_rand(0,156),mt_rand(0,156),mt_rand(0,156));
+        for ($i=0;$i<4;$i++) {
+            $color = imagecolorallocate($this->img,mt_rand(100,180),mt_rand(100,180),mt_rand(100,180));
             imageline($this->img,mt_rand(0,$this->width),mt_rand(0,$this->height),mt_rand(0,$this->width),mt_rand(0,$this->height),$color);
         }
-        for ($i=0;$i<100;$i++) {
+        for ($i=0;$i<30;$i++) {
             $color = imagecolorallocate($this->img,mt_rand(200,255),mt_rand(200,255),mt_rand(200,255));
-            imagestring($this->img,mt_rand(1,5),mt_rand(0,$this->width),mt_rand(0,$this->height),'*',$color);
+            imagestring($this->img,mt_rand(1,3),mt_rand(0,$this->width),mt_rand(0,$this->height),'*',$color);
         }
     }
 

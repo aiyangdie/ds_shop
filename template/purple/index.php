@@ -9,7 +9,7 @@ if(!defined('IN_CRONLITE'))exit();
   <title><?php echo $hometitle?></title>
   <meta name="keywords" content="<?php echo $conf['keywords']?>">
   <meta name="description" content="<?php echo $conf['description']?>">
-  <link href="<?php echo $cdnpublic?>twitter-bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="<?php echo $cdnserver?>assets/vendor/bootstrap.min.css" rel="stylesheet"/>
   <link href="<?php echo $cdnpublic?>font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"/>
   <link rel="stylesheet" href="<?php echo $cdnserver?>assets/simple/css/oneui.css">
   <link rel="stylesheet" href="<?php echo $cdnserver?>assets/css/common.css?ver=<?php echo VERSION ?>">
@@ -521,9 +521,9 @@ catch (e) {
 </div>
 <!--音乐代码-->
 
-<script src="<?php echo $cdnpublic?>jquery/1.12.4/jquery.min.js"></script>
+<script src="<?php echo $cdnserver?>assets/vendor/jquery.min.js"></script>
 <script src="<?php echo $cdnpublic?>jquery.lazyload/1.9.1/jquery.lazyload.min.js"></script>
-<script src="<?php echo $cdnpublic?>twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="<?php echo $cdnserver?>assets/vendor/bootstrap.min.js"></script>
 <script src="<?php echo $cdnpublic?>jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
 <script src="<?php echo $cdnpublic?>layer/2.3/layer.js"></script>
 <script src="<?php echo $cdnserver?>assets/appui/js/app.js"></script>
@@ -535,7 +535,7 @@ $(function() {
 	$("img.lazy").lazyload({effect: "fadeIn"});
 });
 </script>
-<script src="assets/js/main.js?ver=<?php echo VERSION ?>"></script>
+<script src="assets/js/main.js?ver=<?php echo VERSION ?>-dock2"></script>
 <?php if($conf['classblock']==1 || $conf['classblock']==2 && checkmobile()==false)include TEMPLATE_ROOT.'default/classblock.inc.php'; ?>
 </body>
 </html>

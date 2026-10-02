@@ -2,7 +2,7 @@
 /**
  * 登录
 **/
-$verifycode = 1;//验证码开关
+$verifycode = 0;//验证码开关（本地部署关闭，上线请改回 1）
 
 if(!function_exists("imagecreate") || !file_exists('code.php'))$verifycode=0;
 include("../includes/common.php");

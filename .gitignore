@@ -6,3 +6,8 @@ nginx.htaccess
 .env
 /assets/app_package
 config.php
+# local / runtime
+php_local_error.log
+_dbg.txt
+.playwright-mcp/
+supplier/data/*.log

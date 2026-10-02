@@ -4,6 +4,13 @@
 Description:屏蔽腾讯电脑管家网址安全检测
 Author:消失的彩虹海
 */
+// 本地部署关闭该防护，避免 curl / 开发环境被拦截
+if (isset($_SERVER['SERVER_NAME']) && in_array($_SERVER['SERVER_NAME'], ['127.0.0.1', 'localhost'], true)) {
+	return;
+}
+if (isset($_SERVER['HTTP_HOST']) && (strpos($_SERVER['HTTP_HOST'], '127.0.0.1') === 0 || strpos($_SERVER['HTTP_HOST'], 'localhost') === 0)) {
+	return;
+}
 if($nosecu==true)return;
 if(strpos($_SERVER['HTTP_USER_AGENT'], 'Baiduspider')!==false || strpos($_SERVER['HTTP_USER_AGENT'], '360Spider')!==false || strpos($_SERVER['HTTP_USER_AGENT'], 'YisouSpider')!==false || strpos($_SERVER['HTTP_USER_AGENT'], 'Sogou web spider')!==false || strpos($_SERVER['HTTP_USER_AGENT'], 'Sogou inst spider')!==false || strpos($_SERVER['HTTP_USER_AGENT'], 'Googlebot/')!==false || strpos($_SERVER['HTTP_USER_AGENT'], 'bingbot/')!==false || strpos($_SERVER['HTTP_USER_AGENT'], 'Bytespider')!==false){
 	return;

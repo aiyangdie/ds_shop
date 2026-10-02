@@ -20,7 +20,99 @@ if ($conf['cjmsg'] != '') {
 } else {
 	$cjmsg = '您今天的抽奖次数已经达到上限！';
 }
+
+/** 解析商品附加输入项；NULL/空/"null" 视为无附加字段 */
+function parse_tool_inputs($raw) {
+	$raw = trim((string)$raw);
+	if ($raw === '' || strtolower($raw) === 'null') {
+		return [];
+	}
+	$arr = [];
+	foreach (explode('|', $raw) as $v) {
+		$v = trim($v);
+		if ($v !== '' && strtolower($v) !== 'null') {
+			$arr[] = $v;
+		}
+	}
+	return $arr;
+}
+
+/** 校验下单输入；多余附加参数直接丢弃，不再报「验证失败」 */
+function validate_order_inputs($inputs, &$inputvalue, &$inputvalue2, &$inputvalue3, &$inputvalue4, &$inputvalue5) {
+	if ($inputvalue === '' || $inputvalue === null) {
+		exit('{"code":-1,"msg":"请确保各项不能为空"}');
+	}
+	if ((!isset($inputs[0]) || $inputs[0] === '')) {
+		$inputvalue2 = '';
+	} elseif ($inputvalue2 === '' || $inputvalue2 === null) {
+		exit('{"code":-1,"msg":"请确保各项不能为空"}');
+	}
+	if ((!isset($inputs[1]) || $inputs[1] === '')) {
+		$inputvalue3 = '';
+	} elseif ($inputvalue3 === '' || $inputvalue3 === null) {
+		exit('{"code":-1,"msg":"请确保各项不能为空"}');
+	}
+	if ((!isset($inputs[2]) || $inputs[2] === '')) {
+		$inputvalue4 = '';
+	} elseif ($inputvalue4 === '' || $inputvalue4 === null) {
+		exit('{"code":-1,"msg":"请确保各项不能为空"}');
+	}
+	if ((!isset($inputs[3]) || $inputs[3] === '')) {
+		$inputvalue5 = '';
+	} elseif ($inputvalue5 === '' || $inputvalue5 === null) {
+		exit('{"code":-1,"msg":"请确保各项不能为空"}');
+	}
+}
+
+/** 本地无支付通道时附加「模拟支付」按钮 */
+function build_pay_result($trade_no, $need, $extra = []) {
+	global $conf, $islogin2, $userrow;
+	$paymsg = isset($conf['paymsg']) ? $conf['paymsg'] : '';
+	$has_pay = intval($conf['alipay_api']) > 0 || intval($conf['wxpay_api']) > 0 || intval($conf['qqpay_api']) > 0 || $islogin2;
+	if (!$has_pay) {
+		$tn = htmlspecialchars($trade_no, ENT_QUOTES);
+		$paymsg .= '<button type="button" class="btn btn-success btn-block" style="margin-top:10px;" onclick="(function(o){var i=layer.msg(\'模拟支付中...\',{icon:16,shade:0.5,time:20000});$.post(\'ajax.php?act=testpay\',{orderid:o},function(d){layer.close(i);if(d.code==1||d.code==-2){alert(d.msg);location.href=\'?buyok=1\';}else{layer.alert(d.msg||\'支付失败\');}},\'json\').fail(function(){layer.close(i);layer.alert(\'请求失败\');});})(\''.$tn.'\')">本地模拟支付（对接测试）</button>';
+	}
+	$result = [
+		'code' => 0,
+		'msg' => '提交订单成功！',
+		'trade_no' => $trade_no,
+		'need' => $need,
+		'pay_alipay' => $conf['alipay_api'],
+		'pay_wxpay' => $conf['wxpay_api'],
+		'pay_qqpay' => $conf['qqpay_api'],
+		'pay_rmb' => $islogin2,
+		'user_rmb' => isset($userrow['rmb']) ? $userrow['rmb'] : null,
+		'paymsg' => $paymsg,
+	];
+	foreach ($extra as $k => $v) {
+		$result[$k] = $v;
+	}
+	return $result;
+}
+
 switch($act){
+case 'testpay':
+	// 本地无支付通道时的模拟支付（仅用于对接调试）
+	$orderid=isset($_POST['orderid'])?daddslashes($_POST['orderid']):exit('{"code":-1,"msg":"订单号未知"}');
+	$srow=$DB->getRow("SELECT * FROM pre_pay WHERE trade_no=:orderid LIMIT 1", [':orderid'=>$orderid]);
+	if(!$srow['trade_no'] || $srow['tid']==-1)exit('{"code":-1,"msg":"订单号不存在！"}');
+	if($srow['status']==1){
+		$row=$DB->getRow("SELECT id FROM pre_orders WHERE trade_no=:t LIMIT 1", [':t'=>$orderid]);
+		exit('{"code":-2,"msg":"该订单已支付过","orderid":"'.($row?$row['id']:'').'"}');
+	}
+	if($DB->exec("UPDATE `pre_pay` SET `type`='test',`status`='1',`endtime`=NOW() WHERE `trade_no`='{$orderid}'")){
+		$srow['type']='test';
+		$srow['status']=1;
+		if($oid=processOrder($srow)){
+			exit('{"code":1,"msg":"模拟支付成功，已请求货源API发货！","orderid":"'.$oid.'"}');
+		}else{
+			exit('{"code":-1,"msg":"支付成功但下单失败：'.$DB->error().'"}');
+		}
+	}else{
+		exit('{"code":-1,"msg":"支付失败：'.$DB->error().'"}');
+	}
+break;
 case 'payrmb':
 	if(!$islogin2)exit('{"code":-4,"msg":"你还未登录"}');
 	$orderid=isset($_POST['orderid'])?daddslashes($_POST['orderid']):exit('{"code":-1,"msg":"订单号未知"}');
@@ -255,13 +347,8 @@ case 'pay':
 		if($conf['verify_open']==1 && (empty($_SESSION['addsalt']) || $hashsalt!=$_SESSION['addsalt'])){
 			exit('{"code":-1,"msg":"验证失败，请刷新页面重试"}');
 		}
-		$inputs=explode('|',$tool['inputs']);
-		if(empty($inputvalue) || $inputs[0] && empty($inputvalue2) || $inputs[1] && empty($inputvalue3) || $inputs[2] && empty($inputvalue4) || $inputs[3] && empty($inputvalue5)){
-			exit('{"code":-1,"msg":"请确保各项不能为空"}');
-		}
-		if(!$inputs[0] && !empty($inputvalue2) || !$inputs[1] && !empty($inputvalue3) || !$inputs[2] && !empty($inputvalue4) || !$inputs[3] && !empty($inputvalue5)){
-			exit('{"code":-1,"msg":"验证失败"}');
-		}
+		$inputs=parse_tool_inputs($tool['inputs']);
+		validate_order_inputs($inputs, $inputvalue, $inputvalue2, $inputvalue3, $inputvalue4, $inputvalue5);
 		if(in_array($inputvalue,explode("|",$conf['blacklist'])))exit('{"code":-1,"msg":"你的下单账号已被拉黑，无法下单！"}');
 		if($tool['is_curl']==4){
 			if(!$islogin2 && $conf['faka_input']==0 && !checkEmail($inputvalue)){
@@ -465,7 +552,7 @@ case 'pay':
 					if(in_array('wxpay',$blockpay))$conf['wxpay_api']=0;
 					if(in_array('rmb',$blockpay))$islogin2=0;
 				}
-				$result = ['code'=>0, 'msg'=>'提交订单成功！', 'trade_no'=>$trade_no, 'need'=>$need, 'pay_alipay'=>$conf['alipay_api'], 'pay_wxpay'=>$conf['wxpay_api'], 'pay_qqpay'=>$conf['qqpay_api'], 'pay_rmb'=>$islogin2, 'user_rmb'=>$userrow['rmb'], 'paymsg'=>$conf['paymsg']];
+				$result = build_pay_result($trade_no, $need);
 				exit(json_encode($result));
 			}else{
 				exit('{"code":-1,"msg":"提交订单失败！'.$DB->error().'"}');
@@ -561,7 +648,7 @@ case 'pays':
 		if($DB->exec($sql, $data)){
 			unset($_SESSION['addsalt']);
 			if($conf['forcermb']==1){$conf['alipay_api']=0;$conf['wxpay_api']=0;$conf['qqpay_api']=0;}
-			$result = ['code'=>0, 'msg'=>'提交订单成功！', 'trade_no'=>$trade_no, 'need'=>$need, 'num'=>$count, 'pay_alipay'=>$conf['alipay_api'], 'pay_wxpay'=>$conf['wxpay_api'], 'pay_qqpay'=>$conf['qqpay_api'], 'pay_rmb'=>$islogin2, 'user_rmb'=>$userrow['rmb'], 'paymsg'=>$conf['paymsg']];
+			$result = build_pay_result($trade_no, $need, ['num' => $count]);
 			exit(json_encode($result));
 		}else{
 			exit('{"code":-1,"msg":"提交订单失败！'.$DB->error().'"}');
@@ -623,13 +710,8 @@ case 'card_pay':
 		if($conf['verify_open']==1 && (empty($_SESSION['addsalt']) || $hashsalt!=$_SESSION['addsalt'])){
 			exit('{"code":-1,"msg":"验证失败，请刷新页面重试"}');
 		}
-		$inputs=explode('|',$tool['inputs']);
-		if(empty($inputvalue) || $inputs[0] && empty($inputvalue2) || $inputs[1] && empty($inputvalue3) || $inputs[2] && empty($inputvalue4) || $inputs[3] && empty($inputvalue5)){
-			exit('{"code":-1,"msg":"请确保各项不能为空"}');
-		}
-		if(!$inputs[0] && !empty($inputvalue2) || !$inputs[1] && !empty($inputvalue3) || !$inputs[2] && !empty($inputvalue4) || !$inputs[3] && !empty($inputvalue5)){
-			exit('{"code":-1,"msg":"验证失败"}');
-		}
+		$inputs=parse_tool_inputs($tool['inputs']);
+		validate_order_inputs($inputs, $inputvalue, $inputvalue2, $inputvalue3, $inputvalue4, $inputvalue5);
 		if(in_array($inputvalue,explode("|",$conf['blacklist'])))exit('{"code":-1,"msg":"你的下单账号已被拉黑，无法下单！"}');
 		if($tool['is_curl']==4){
 			if(!$islogin2 && $conf['faka_input']==0 && !checkEmail($inputvalue)){
@@ -993,13 +1075,8 @@ case 'invite_create':
 	}
 	if($tool['close']==1)exit('{"code":-1,"msg":"当前商品维护中，停止下单！"}');
 	if(in_array($inputvalue,explode("|",$conf['blacklist'])))exit('{"code":-1,"msg":"你的下单账号已被拉黑，无法下单！"}');
-	$inputs=explode('|',$tool['inputs']);
-	if($inputs[0] && empty($inputvalue2) || $inputs[1] && empty($inputvalue3) || $inputs[2] && empty($inputvalue4) || $inputs[3] && empty($inputvalue5)){
-		exit('{"code":-1,"msg":"请确保各项不能为空"}');
-	}
-	if(!$inputs[0] && !empty($inputvalue2) || !$inputs[1] && !empty($inputvalue3) || !$inputs[2] && !empty($inputvalue4) || !$inputs[3] && !empty($inputvalue5)){
-		exit('{"code":-1,"msg":"验证失败"}');
-	}
+	$inputs=parse_tool_inputs($tool['inputs']);
+	validate_order_inputs($inputs, $inputvalue, $inputvalue2, $inputvalue3, $inputvalue4, $inputvalue5);
 	if($tool['validate']==1 && is_numeric($inputvalue)){
 		if(validate_qzone($inputvalue)==false)
 			exit('{"code":-1,"msg":"你的QQ空间设置了访问权限，无法下单！"}');
@@ -1267,7 +1344,7 @@ case 'cart_buy':
 	if($DB->exec($sql, $data)){
 		unset($_SESSION['addsalt']);
 		if($conf['forcermb']==1){$conf['alipay_api']=0;$conf['wxpay_api']=0;$conf['qqpay_api']=0;}
-		$result = ['code'=>0, 'msg'=>'提交订单成功！', 'trade_no'=>$trade_no, 'need'=>$allmoney, 'pay_alipay'=>$conf['alipay_api'], 'pay_wxpay'=>$conf['wxpay_api'], 'pay_qqpay'=>$conf['qqpay_api'], 'pay_rmb'=>$islogin2, 'user_rmb'=>$userrow['rmb'], 'paymsg'=>$conf['paymsg']];
+		$result = build_pay_result($trade_no, $allmoney);
 		exit(json_encode($result));
 	}else{
 		exit('{"code":-1,"msg":"提交订单失败！'.$DB->error().'"}');

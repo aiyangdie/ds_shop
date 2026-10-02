@@ -145,8 +145,9 @@ function getPoint() {
 		$('#inputsname').append('<div class="form-group"><div class="input-group"><div class="input-group-addon" id="inputname">'+inputname+'</div><input type="text" name="inputvalue" id="inputvalue" value="'+($_GET['qq']?$_GET['qq']:'')+'" class="form-control" required onblur="checkInput()"/></div></div>');
 	}
 	var inputsname = $('#tid option:selected').attr('inputsname');
-	if(inputsname!=''){
+	if(inputsname && inputsname!=='null' && inputsname!=='undefined' && inputsname!==''){
 		$.each(inputsname.split('|'), function(i, value) {
+			if(!value || value==='null' || value==='undefined') return;
 			var inputsnametype = '';
 			if(value.indexOf('[')>0 && value.indexOf(']')>0){
 				inputsnametype = value.split('[')[1].split(']')[0];
@@ -951,7 +952,7 @@ $("#doSearch").click(function () {
 			if(data.code == 0){
 				var num = 0;
 				$.each(data.data, function (i, res) {
-					$("#tid").append('<option value="'+res.tid+'" cid="'+res.cid+'" price="'+res.price+'" desc="'+escape(res.desc)+'" alert="'+escape(res.alert)+'" inputname="'+res.input+'" inputsname="'+res.inputs+'" multi="'+res.multi+'" isfaka="'+res.isfaka+'" count="'+res.value+'" close="'+res.close+'" prices="'+res.prices+'" max="'+res.max+'" min="'+res.min+'" stock="'+res.stock+'">'+res.name+'</option>');
+					$("#tid").append('<option value="'+res.tid+'" cid="'+res.cid+'" price="'+res.price+'" desc="'+escape(res.desc)+'" alert="'+escape(res.alert)+'" inputname="'+res.input+'" inputsname="'+(res.inputs?res.inputs:'')+'" multi="'+res.multi+'" isfaka="'+res.isfaka+'" count="'+res.value+'" close="'+res.close+'" prices="'+res.prices+'" max="'+res.max+'" min="'+res.min+'" stock="'+res.stock+'">'+res.name+'</option>');
 					num++;
 				});
 				$("#tid").val(0);
@@ -989,7 +990,7 @@ $("#cid").change(function () {
 				}
 				var num = 0;
 				$.each(data.data, function (i, res) {
-					$("#tid").append('<option value="'+res.tid+'" cid="'+res.cid+'" price="'+res.price+'" desc="'+escape(res.desc)+'" alert="'+escape(res.alert)+'" inputname="'+res.input+'" inputsname="'+res.inputs+'" multi="'+res.multi+'" isfaka="'+res.isfaka+'" count="'+res.value+'" close="'+res.close+'" prices="'+res.prices+'" max="'+res.max+'" min="'+res.min+'" stock="'+res.stock+'">'+res.name+'</option>');
+					$("#tid").append('<option value="'+res.tid+'" cid="'+res.cid+'" price="'+res.price+'" desc="'+escape(res.desc)+'" alert="'+escape(res.alert)+'" inputname="'+res.input+'" inputsname="'+(res.inputs?res.inputs:'')+'" multi="'+res.multi+'" isfaka="'+res.isfaka+'" count="'+res.value+'" close="'+res.close+'" prices="'+res.prices+'" max="'+res.max+'" min="'+res.min+'" stock="'+res.stock+'">'+res.name+'</option>');
 					num++;
 				});
 				if($_GET["tid"] && $_GET["cid"]==cid){
@@ -1015,7 +1016,7 @@ $("#cid").change(function () {
 		if(tid==0){layer.alert('请选择商品！');return false;}
 		var inputvalue=$("#inputvalue").val();
 		if(inputvalue=='' || tid==''){layer.alert('请确保每项不能为空！');return false;}
-		if($("#inputvalue2").val()=='' || $("#inputvalue3").val()=='' || $("#inputvalue4").val()=='' || $("#inputvalue5").val()==''){layer.alert('请确保每项不能为空！');return false;}
+		if(($('#inputvalue2').length && $('#inputvalue2').val()==='') || ($('#inputvalue3').length && $('#inputvalue3').val()==='') || ($('#inputvalue4').length && $('#inputvalue4').val()==='') || ($('#inputvalue5').length && $('#inputvalue5').val()==='')){layer.alert('请确保每项不能为空！');return false;}
 		if(($('#inputname').html()=='下单ＱＱ' || $('#inputname').html()=='ＱＱ账号' || $("#inputname").html() == 'QQ账号') && (inputvalue.length<5 || inputvalue.length>11 || isNaN(inputvalue))){layer.alert('请输入正确的QQ号！');return false;}
 		var reg = /^([a-zA-Z0-9_-])+@([a-zA-Z0-9_-])+(.[a-zA-Z0-9_-])+/;
 		if($('#inputname').html()=='你的邮箱' && !reg.test(inputvalue)){layer.alert('邮箱格式不正确！');return false;}
@@ -1182,7 +1183,7 @@ $("#cid").change(function () {
 		if(tid==0){layer.alert('请选择商品！');return false;}
 		var inputvalue=$("#inputvalue").val();
 		if(inputvalue=='' || tid==''){layer.alert('请确保每项不能为空！');return false;}
-		if($("#inputvalue2").val()=='' || $("#inputvalue3").val()=='' || $("#inputvalue4").val()=='' || $("#inputvalue5").val()==''){layer.alert('请确保每项不能为空！');return false;}
+		if(($('#inputvalue2').length && $('#inputvalue2').val()==='') || ($('#inputvalue3').length && $('#inputvalue3').val()==='') || ($('#inputvalue4').length && $('#inputvalue4').val()==='') || ($('#inputvalue5').length && $('#inputvalue5').val()==='')){layer.alert('请确保每项不能为空！');return false;}
 		if(($('#inputname').html()=='下单ＱＱ' || $('#inputname').html()=='ＱＱ账号' || $("#inputname").html() == 'QQ账号') && (inputvalue.length<5 || inputvalue.length>11 || isNaN(inputvalue))){layer.alert('请输入正确的QQ号！');return false;}
 		var reg = /^([a-zA-Z0-9_-])+@([a-zA-Z0-9_-])+(.[a-zA-Z0-9_-])+/;
 		if($('#inputname').html()=='你的邮箱' && !reg.test(inputvalue)){layer.alert('邮箱格式不正确！');return false;}

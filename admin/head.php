@@ -26,14 +26,14 @@ if($admin_cdnpublic==1){
     <meta name="force-rendering" content="webkit"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title><?php echo $title ?></title>
-    <link href="<?php echo $cdnpublic ?>twitter-bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="../assets/vendor/bootstrap.min.css" rel="stylesheet"/>
     <link href="<?php echo $cdnpublic ?>font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"/>
     <link rel="stylesheet" href="../assets/appui/css/main.css">
     <link rel="stylesheet" href="../assets/appui/css/themes.css">
     <link id="theme-link" rel="stylesheet"
           href="<?php echo $_COOKIE['optionThemeColor'] ? $_COOKIE['optionThemeColor'] : '../assets/appui/css/themes/amethyst-2.4.css'; ?>">
-    <script src="<?php echo $cdnpublic ?>jquery/2.1.4/jquery.min.js"></script>
-    <script src="<?php echo $cdnpublic ?>twitter-bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script src="../assets/vendor/jquery.min.js"></script>
+    <script src="../assets/vendor/bootstrap.min.js"></script>
     <script src="../assets/appui/js/plugins.js"></script>
     <script src="../assets/appui/js/app2.js"></script>
     <!--[if lt IE 9]>
@@ -376,11 +376,16 @@ if($admin_cdnpublic==1){
                             </a>
                         </li>
 
-                        <li class="<?php echo checkIfActive('shequlist,pricejk,log,clone,cloneset,shequ,orderjk,batchgoods') ?>">
+                        <li class="<?php echo checkIfActive('shequlist,pricejk,log,clone,cloneset,shequ,orderjk,batchgoods,api_dock') ?>">
                             <a href="javascript:void(0)" class="sidebar-nav-menu"><i
                                         class="fa fa-chevron-left sidebar-nav-indicator sidebar-nav-mini-hide"></i><i
                                         class="fa fa-cubes sidebar-nav-icon"></i><span class="sidebar-nav-mini-hide">对接设置</span></a>
                             <ul>
+                                <li>
+                                    <a class="<?php echo checkIfActive("api_dock") ?>" href="./api_dock.php">
+                                        货源API对接
+                                    </a>
+                                </li>
                                 <li>
                                     <a class="<?php echo checkIfActive("shequlist") ?>" href="./shequlist.php">
                                         对接站点管理

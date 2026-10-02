@@ -59,15 +59,22 @@ var App = function() {
         rippleEffect($('.btn-effect-ripple'), 'btn-ripple');
 
         // Initialize Tabs
-        $('[data-toggle="tabs"] a, .enable-tabs a').click(function(e){ e.preventDefault(); $(this).tab('show'); });
+        if ($.fn.tab) {
+            $('[data-toggle="tabs"] a, .enable-tabs a').click(function(e){ e.preventDefault(); $(this).tab('show'); });
+        }
 
         // Initialize Tooltips
-        $('[data-toggle="tooltip"], .enable-tooltip').tooltip({container: 'body', animation: false});
+        if ($.fn.tooltip) {
+            $('[data-toggle="tooltip"], .enable-tooltip').tooltip({container: 'body', animation: false});
+        }
 
         // Initialize Popovers
-        $('[data-toggle="popover"], .enable-popover').popover({container: 'body', animation: true});
+        if ($.fn.popover) {
+            $('[data-toggle="popover"], .enable-popover').popover({container: 'body', animation: true});
+        }
 
         // Easy Pie Chart
+        if ($.fn.easyPieChart) {
         $('.pie-chart').easyPieChart({
             barColor: $(this).data('bar-color') ? $(this).data('bar-color') : '#777777',
             trackColor: $(this).data('track-color') ? $(this).data('track-color') : '#eeeeee',
@@ -76,6 +83,7 @@ var App = function() {
             animate: 800,
             scaleColor: false
         });
+        }
 
         // Toggles 'open' class on toggle menu
         $('.toggle-menu .submenu').on('click', function(){
@@ -85,7 +93,9 @@ var App = function() {
         });
 
         // Initialize Placeholder (for IE9)
-        $('input, textarea').placeholder();
+        if ($.fn.placeholder) {
+            $('input, textarea').placeholder();
+        }
     };
 
     /* Page Loading functionality */
