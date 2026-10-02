@@ -150,6 +150,57 @@ class Tools
             $this->fn('supplier_pull_goods', '从同系统对接站点拉取货源商品列表', array(
                 'shequ_id' => array('type' => 'integer', 'description' => '对接站点ID，不传则取第一个daishua'),
             )),
+            $this->fn('save_shequ', '新增或更新对接站点；传id为更新', array(
+                'id' => array('type' => 'integer', 'description' => '对接站点ID，更新时必填'),
+                'url' => array('type' => 'string', 'description' => '对接域名，不含协议'),
+                'username' => array('type' => 'string', 'description' => '对接账号'),
+                'password' => array('type' => 'string', 'description' => '对接密码/密钥'),
+                'type' => array('type' => 'string', 'description' => '类型，如 daishua'),
+                'protocol' => array('type' => 'integer', 'description' => '0=http 1=https'),
+                'status' => array('type' => 'integer', 'description' => '1启用0停用'),
+                'remark' => array('type' => 'string', 'description' => '备注'),
+                'confirm' => array('type' => 'boolean', 'description' => '写操作必须 true'),
+            ), array('confirm')),
+            $this->fn('list_pay_orders', '查询支付订单', array(
+                'keyword' => array('type' => 'string', 'description' => '订单号/账号关键词'),
+                'status' => array('type' => 'integer', 'description' => '0未支付1已支付'),
+                'limit' => array('type' => 'integer', 'description' => '默认20'),
+            )),
+            $this->fn('list_workorders', '查询工单', array(
+                'status' => array('type' => 'integer', 'description' => '工单状态，可空'),
+                'limit' => array('type' => 'integer', 'description' => '默认20'),
+            )),
+            $this->fn('set_workorder_status', '修改工单状态', array(
+                'id' => array('type' => 'integer', 'description' => '工单ID'),
+                'status' => array('type' => 'integer', 'description' => '目标状态'),
+                'confirm' => array('type' => 'boolean', 'description' => '必须 true'),
+            ), array('id', 'status', 'confirm')),
+            $this->fn('list_faka', '查询发卡库存', array(
+                'tid' => array('type' => 'integer', 'description' => '商品ID，可空'),
+                'limit' => array('type' => 'integer', 'description' => '默认30'),
+            )),
+            $this->fn('list_kms', '查询卡密', array(
+                'tid' => array('type' => 'integer', 'description' => '商品ID，可空'),
+                'limit' => array('type' => 'integer', 'description' => '默认30'),
+            )),
+            $this->fn('list_articles', '查询文章', array(
+                'keyword' => array('type' => 'string', 'description' => '标题关键词'),
+                'limit' => array('type' => 'integer', 'description' => '默认20'),
+            )),
+            $this->fn('list_tixian', '查询分站提现', array(
+                'status' => array('type' => 'integer', 'description' => '0待处理1已完成2已拒绝，可空'),
+                'limit' => array('type' => 'integer', 'description' => '默认20'),
+            )),
+            $this->fn('set_tixian_status', '处理提现（通过或拒绝）', array(
+                'id' => array('type' => 'integer', 'description' => '提现ID'),
+                'status' => array('type' => 'integer', 'description' => '1通过2拒绝'),
+                'confirm' => array('type' => 'boolean', 'description' => '必须 true'),
+            ), array('id', 'status', 'confirm')),
+            $this->fn('list_messages', '查询站内通知', array(
+                'limit' => array('type' => 'integer', 'description' => '默认20'),
+            )),
+            $this->fn('list_price_rules', '列出加价模板', array()),
+            $this->fn('capability_catalog', '返回当前 AI 可调用的全部能力清单', array()),
         );
     }
 
@@ -229,6 +280,30 @@ class Tools
                     return $this->listShequ();
                 case 'supplier_pull_goods':
                     return $this->supplierPullGoods($args);
+                case 'save_shequ':
+                    return $this->saveShequ($args);
+                case 'list_pay_orders':
+                    return $this->listPayOrders($args);
+                case 'list_workorders':
+                    return $this->listWorkorders($args);
+                case 'set_workorder_status':
+                    return $this->setWorkorderStatus($args);
+                case 'list_faka':
+                    return $this->listFaka($args);
+                case 'list_kms':
+                    return $this->listKms($args);
+                case 'list_articles':
+                    return $this->listArticles($args);
+                case 'list_tixian':
+                    return $this->listTixian($args);
+                case 'set_tixian_status':
+                    return $this->setTixianStatus($args);
+                case 'list_messages':
+                    return $this->listMessages($args);
+                case 'list_price_rules':
+                    return $this->listPriceRules();
+                case 'capability_catalog':
+                    return $this->capabilityCatalog();
                 default:
                     return array('ok' => false, 'error' => '未知工具: ' . $name);
             }
@@ -664,5 +739,154 @@ class Tools
             return array('ok' => false, 'error' => is_string($list) ? $list : json_encode($list, JSON_UNESCAPED_UNICODE));
         }
         return array('ok' => true, 'shequ_id' => intval($shequ['id']), 'count' => count($list), 'data' => array_slice($list, 0, 40));
+    }
+
+    private function saveShequ($args)
+    {
+        if (empty($args['confirm'])) return array('ok' => false, 'error' => '保存对接站点需 confirm=true');
+        $id = isset($args['id']) ? intval($args['id']) : 0;
+        $fields = array('url', 'username', 'password', 'type', 'protocol', 'status', 'remark');
+        $data = array();
+        foreach ($fields as $f) {
+            if (array_key_exists($f, $args)) $data[$f] = $args[$f];
+        }
+        if ($id > 0) {
+            if (!$data) return array('ok' => false, 'error' => '无更新字段');
+            $sets = array();
+            foreach ($data as $k => $v) {
+                if (in_array($k, array('protocol', 'status'), true)) $sets[] = "`$k`='" . intval($v) . "'";
+                else $sets[] = "`$k`='" . addslashes(strval($v)) . "'";
+            }
+            $ok = $this->DB->exec("UPDATE pre_shequ SET " . implode(',', $sets) . " WHERE id='$id'");
+            return array('ok' => $ok !== false, 'id' => $id, 'msg' => '对接站点已更新');
+        }
+        $url = isset($data['url']) ? trim($data['url']) : '';
+        if ($url === '') return array('ok' => false, 'error' => '新建时 url 必填');
+        $username = isset($data['username']) ? $data['username'] : '';
+        $password = isset($data['password']) ? $data['password'] : '';
+        $type = isset($data['type']) ? $data['type'] : 'daishua';
+        $protocol = isset($data['protocol']) ? intval($data['protocol']) : 0;
+        $status = isset($data['status']) ? intval($data['status']) : 1;
+        $remark = isset($data['remark']) ? $data['remark'] : '';
+        $ok = $this->DB->exec("INSERT INTO pre_shequ (url,username,password,type,protocol,status,remark) VALUES ('" . addslashes($url) . "','" . addslashes($username) . "','" . addslashes($password) . "','" . addslashes($type) . "','$protocol','$status','" . addslashes($remark) . "')");
+        if ($ok === false) return array('ok' => false, 'error' => $this->DB->error());
+        return array('ok' => true, 'id' => intval($this->DB->lastInsertId()), 'msg' => '对接站点已创建');
+    }
+
+    private function listPayOrders($args)
+    {
+        $limit = isset($args['limit']) ? min(50, max(1, intval($args['limit']))) : 20;
+        $where = '1=1';
+        if (isset($args['status']) && $args['status'] !== '' && $args['status'] !== null) {
+            $where .= ' AND status=' . intval($args['status']);
+        }
+        if (!empty($args['keyword'])) {
+            $kw = addslashes(trim($args['keyword']));
+            $where .= " AND (trade_no LIKE '%$kw%' OR input LIKE '%$kw%')";
+        }
+        $rows = $this->DB->getAll("SELECT trade_no,type,tid,input,money,status,ip,addtime,endtime FROM pre_pay WHERE $where ORDER BY addtime DESC LIMIT $limit");
+        return array('ok' => true, 'count' => count($rows), 'data' => $rows);
+    }
+
+    private function listWorkorders($args)
+    {
+        $limit = isset($args['limit']) ? min(50, max(1, intval($args['limit']))) : 20;
+        $where = '1=1';
+        if (isset($args['status']) && $args['status'] !== '' && $args['status'] !== null) {
+            $where .= ' AND status=' . intval($args['status']);
+        }
+        $rows = $this->DB->getAll("SELECT * FROM pre_workorder WHERE $where ORDER BY id DESC LIMIT $limit");
+        return array('ok' => true, 'count' => count($rows), 'data' => $rows);
+    }
+
+    private function setWorkorderStatus($args)
+    {
+        if (empty($args['confirm'])) return array('ok' => false, 'error' => '处理工单需 confirm=true');
+        $id = intval(isset($args['id']) ? $args['id'] : 0);
+        $status = intval(isset($args['status']) ? $args['status'] : -1);
+        if ($id <= 0) return array('ok' => false, 'error' => '无效工单ID');
+        $ok = $this->DB->exec("UPDATE pre_workorder SET status='$status' WHERE id='$id'");
+        return array('ok' => $ok !== false, 'msg' => $ok !== false ? '工单状态已更新' : $this->DB->error());
+    }
+
+    private function listFaka($args)
+    {
+        $limit = isset($args['limit']) ? min(80, max(1, intval($args['limit']))) : 30;
+        $where = '1=1';
+        if (!empty($args['tid'])) $where .= ' AND tid=' . intval($args['tid']);
+        $rows = $this->DB->getAll("SELECT kid,tid,km,pw,orderid,addtime,usetime FROM pre_faka WHERE $where ORDER BY kid DESC LIMIT $limit");
+        return array('ok' => true, 'count' => count($rows), 'data' => $rows);
+    }
+
+    private function listKms($args)
+    {
+        $limit = isset($args['limit']) ? min(80, max(1, intval($args['limit']))) : 30;
+        $where = '1=1';
+        if (!empty($args['tid'])) $where .= ' AND tid=' . intval($args['tid']);
+        $rows = $this->DB->getAll("SELECT kid,tid,km,money,status,addtime FROM pre_kms WHERE $where ORDER BY kid DESC LIMIT $limit");
+        return array('ok' => true, 'count' => count($rows), 'data' => $rows);
+    }
+
+    private function listArticles($args)
+    {
+        $limit = isset($args['limit']) ? min(50, max(1, intval($args['limit']))) : 20;
+        $where = '1=1';
+        if (!empty($args['keyword'])) {
+            $kw = addslashes(trim($args['keyword']));
+            $where .= " AND title LIKE '%$kw%'";
+        }
+        $rows = $this->DB->getAll("SELECT id,title,active,addtime FROM pre_article WHERE $where ORDER BY id DESC LIMIT $limit");
+        return array('ok' => true, 'count' => count($rows), 'data' => $rows);
+    }
+
+    private function listTixian($args)
+    {
+        $limit = isset($args['limit']) ? min(50, max(1, intval($args['limit']))) : 20;
+        $where = '1=1';
+        if (isset($args['status']) && $args['status'] !== '' && $args['status'] !== null) {
+            $where .= ' AND status=' . intval($args['status']);
+        }
+        $rows = $this->DB->getAll("SELECT id,zid,money,realmoney,pay_type,pay_account,pay_name,status,addtime FROM pre_tixian WHERE $where ORDER BY id DESC LIMIT $limit");
+        return array('ok' => true, 'count' => count($rows), 'data' => $rows);
+    }
+
+    private function setTixianStatus($args)
+    {
+        if (empty($args['confirm'])) return array('ok' => false, 'error' => '处理提现需 confirm=true');
+        $id = intval(isset($args['id']) ? $args['id'] : 0);
+        $status = intval(isset($args['status']) ? $args['status'] : -1);
+        if ($id <= 0 || ($status !== 1 && $status !== 2)) return array('ok' => false, 'error' => '参数无效，status 仅支持 1通过 2拒绝');
+        $row = $this->DB->getRow("SELECT * FROM pre_tixian WHERE id='$id' LIMIT 1");
+        if (!$row) return array('ok' => false, 'error' => '提现记录不存在');
+        if (intval($row['status']) !== 0) return array('ok' => false, 'error' => '仅待处理提现可操作');
+        $ok = $this->DB->exec("UPDATE pre_tixian SET status='$status' WHERE id='$id'");
+        return array('ok' => $ok !== false, 'msg' => $status === 1 ? '已通过提现' : '已拒绝提现');
+    }
+
+    private function listMessages($args)
+    {
+        $limit = isset($args['limit']) ? min(50, max(1, intval($args['limit']))) : 20;
+        $rows = $this->DB->getAll("SELECT id,zid,type,title,content,addtime FROM pre_message ORDER BY id DESC LIMIT $limit");
+        return array('ok' => true, 'count' => count($rows), 'data' => $rows);
+    }
+
+    private function listPriceRules()
+    {
+        $rows = $this->DB->getAll("SELECT * FROM pre_price ORDER BY id ASC");
+        return array('ok' => true, 'count' => count($rows), 'data' => $rows);
+    }
+
+    private function capabilityCatalog()
+    {
+        $defs = $this->definitions();
+        $list = array();
+        foreach ($defs as $d) {
+            $list[] = array(
+                'name' => $d['function']['name'],
+                'label' => Store::toolLabel($d['function']['name']),
+                'description' => $d['function']['description'],
+            );
+        }
+        return array('ok' => true, 'count' => count($list), 'data' => $list);
     }
 }

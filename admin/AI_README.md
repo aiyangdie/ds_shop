@@ -1,26 +1,29 @@
 # AI 运营助手
 
-用自然语言直接操作本站（订单 / 商品 / 分类 / 分站 / 配置 / 货源），无需点后台页面或进用户分站。
+用自然语言直接操作本站，无需点后台页面。
 
-## 后台入口
+## 入口
 
-1. **模型配置** `admin/ai_set.php` — 选预设（DeepSeek / OpenAI / 通义 / Kimi / 智谱 / 硅基流动 / 自定义），填 API Key，开启 AI。
-2. **对话操作** `admin/ai.php` — 登录后台后直接对话下指令。
+- 对话：`admin/ai.php`（左侧历史对话，中间聊天，右侧本轮操作日志）
+- 全部日志：`admin/ai_log.php`（参数/结果/耗时/IP/请求号，对话删除后日志仍保留）
+- 模型配置：`admin/ai_set.php`
 
-## 外部 Agent 接口
+## 历史与限额
 
-`POST /ai_api.php`  
-Header: `Authorization: Bearer {ai_api_token}`（在模型配置页生成）
+- 对话数量默认最多约 40 条（可配 `ai_session_limit`）
+- 单对话消息默认最多约 80 条（可配 `ai_message_limit`）
+- 超出自动清理最旧对话/消息；**操作日志不随对话删除**
 
-```json
-{"message": "列出最近未处理订单", "history": []}
-```
+## 数据表
 
-也可：
+首次访问会自动建表，也可执行 `install/ai_tables.sql`：
 
-- `?act=tools` 查看可用工具
-- `{"act":"tool","name":"dashboard_stats","arguments":{}}` 直接调工具
+- `pre_ai_session` 对话
+- `pre_ai_message` 消息
+- `pre_ai_log` 详细操作审计
 
-## 已接工具
+## 能力概览
 
-经营概况、搜/改订单、退款、商品 CRUD/上下架、分类、分站启停与充值、白名单配置读写、对接站点与货源拉品。
+经营概况、订单（查/改/批量/退款/重对接）、商品分类、分站余额、站点配置、对接货源、支付订单、工单、发卡、卡密、文章、提现、站内通知、加价模板；可用 `capability_catalog` 拉取完整清单。
+
+写操作（退款、充值、批量、删除、提现等）需用户明确确认，`confirm=true`。

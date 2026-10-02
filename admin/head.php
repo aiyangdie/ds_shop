@@ -376,7 +376,7 @@ if($admin_cdnpublic==1){
                             </a>
                         </li>
 
-                        <li class="<?php echo checkIfActive('ai,ai_set') ?>">
+                        <li class="<?php echo checkIfActive('ai,ai_set,ai_log') ?>">
                             <a href="javascript:void(0)" class="sidebar-nav-menu"><i
                                         class="fa fa-chevron-left sidebar-nav-indicator sidebar-nav-mini-hide"></i><i
                                         class="fa fa-magic sidebar-nav-icon"></i><span class="sidebar-nav-mini-hide">AI助手</span></a>
@@ -384,6 +384,11 @@ if($admin_cdnpublic==1){
                                 <li>
                                     <a class="<?php echo checkIfActive('ai,') ?>" href="./ai.php">
                                         对话操作
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="<?php echo checkIfActive('ai_log') ?>" href="./ai_log.php">
+                                        操作日志
                                     </a>
                                 </li>
                                 <li>
