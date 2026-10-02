@@ -477,6 +477,11 @@ if($admin_cdnpublic==1){
                                         系统数据清理
                                     </a>
                                 </li>
+                                <li>
+                                    <a class="<?php echo checkIfActive("proxy") ?>" href="./proxy.php">
+                                        代理服务器设置
+                                    </a>
+                                </li>
                             </ul>
                         </li>
 

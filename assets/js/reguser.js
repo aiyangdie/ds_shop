@@ -78,6 +78,10 @@ $(document).ready(function(){
 			}
 			var adddata = {code:code};
 		}
+		if(typeof layer === 'undefined'){
+			alert('页面组件加载失败，请刷新后重试（检查 layer.js / CDN 是否可访问）');
+			return false;
+		}
 		var ii = layer.load(2, {shade:[0.1,'#fff']});
 		$.ajax({
 			type : "POST",
@@ -96,7 +100,15 @@ $(document).ready(function(){
 				}else{
 					layer.alert(data.msg);
 				}
-			} 
+			},
+			error : function(xhr){
+				layer.close(ii);
+				var msg = '注册请求失败，请刷新页面重试';
+				if(xhr && xhr.status){
+					msg += '（HTTP '+xhr.status+'）';
+				}
+				layer.alert(msg);
+			}
 		});
 	});
 	if(captcha_type == 1){

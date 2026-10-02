@@ -141,7 +141,7 @@ echo $con;
     <input type="text" class="form-control" name="kw" placeholder="请输入下单账号或订单号" value="">
 	<select name="type" class="form-control"><option value="-1">全部状态</option><option value="0">待处理</option><option value="2">正在处理</option><option value="1">已完成</option><option value="3">异常</option><option value="4">已退单</option></select>
 	<button type="submit" class="btn btn-info"><i class="fa fa-search"></i>&nbsp;搜索</button>
-	<a href="#" data-toggle="modal" data-target="#search2" id="search2" class="btn btn-success"><i class="fa fa-exclamation-circle"></i>&nbsp;订单状态说明</a>
+	<a href="#" data-toggle="modal" data-target="#search2" id="search2btn" class="btn btn-success"><i class="fa fa-exclamation-circle"></i>&nbsp;订单状态说明</a>
   </div>
 </form>
 			</div>
@@ -188,9 +188,11 @@ while($res = $rs->fetch())
 	}else{
 		$input = $res['input'];
 	}
+	// 分站可查看本站订单详情；普通用户仅可查看自己支付的订单
+	$can_view = ($userrow['power']>0 && $res['zid']==$userrow['zid']) || $res['userid']==$userrow['zid'];
 echo '<tr>
 	<td>
-								'.($res['userid']==$userrow['zid']?'<a href="javascript:showOrder('.$res['id'].',\''.md5($res['id'].SYS_KEY.$res['id']).'\')" title="查看订单详细" class="btn btn-info btn-xs">详细</a>':'<a href="javascript:;" class="btn btn-info btn-xs" disabled title="不是你支付的订单">详细</a>').'
+								'.($can_view?'<a href="javascript:showOrder('.$res['id'].',\''.md5($res['id'].SYS_KEY.$res['id']).'\')" title="查看订单详细" class="btn btn-info btn-xs">详细</a>':'<a href="javascript:;" class="btn btn-info btn-xs" disabled title="不是你支付的订单">详细</a>').'
 							</td>
 							<td>
 								'.$res['id'].'

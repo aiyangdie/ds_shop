@@ -1,5 +1,6 @@
 <?php
 function get_curl($url,$post=0,$referer=0,$cookie=0,$header=0,$ua=0,$nobaody=0,$addheader=0){
+	global $conf;
 	$ch = curl_init();
 	curl_setopt($ch, CURLOPT_URL,$url);
 	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
@@ -37,6 +38,26 @@ function get_curl($url,$post=0,$referer=0,$cookie=0,$header=0,$ua=0,$nobaody=0,$
 	}
 	if($nobaody){
 		curl_setopt($ch, CURLOPT_NOBODY,1);
+	}
+	// 应用后台代理服务器设置（修复原 proxy_n 保存失败后即使保存也无法生效的问题）
+	if(!empty($conf['proxy']) && intval($conf['proxy'])==1 && !empty($conf['proxy_server'])){
+		$proxy_port = !empty($conf['proxy_port']) ? $conf['proxy_port'] : '80';
+		curl_setopt($ch, CURLOPT_PROXY, $conf['proxy_server'].':'.$proxy_port);
+		$proxy_type = isset($conf['proxy_type']) ? strtolower($conf['proxy_type']) : 'http';
+		if($proxy_type==='sock5' || $proxy_type==='socks5'){
+			curl_setopt($ch, CURLOPT_PROXYTYPE, CURLPROXY_SOCKS5);
+		}elseif($proxy_type==='sock4' || $proxy_type==='socks4'){
+			curl_setopt($ch, CURLOPT_PROXYTYPE, CURLPROXY_SOCKS4);
+		}else{
+			curl_setopt($ch, CURLOPT_PROXYTYPE, CURLPROXY_HTTP);
+		}
+		if(!empty($conf['proxy_user'])){
+			$proxy_auth = $conf['proxy_user'];
+			if(isset($conf['proxy_pwd']) && $conf['proxy_pwd']!==''){
+				$proxy_auth .= ':'.$conf['proxy_pwd'];
+			}
+			curl_setopt($ch, CURLOPT_PROXYUSERPWD, $proxy_auth);
+		}
 	}
 	curl_setopt($ch, CURLOPT_ENCODING, "gzip");
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);
@@ -301,5 +322,37 @@ function checkRefererHost(){
 	$http_host = $_SERVER['HTTP_HOST'];
 	if(strpos($http_host,':'))$http_host = substr($http_host, 0, strpos($http_host, ':'));
 	return $url_arr['host'] === $http_host;
+}
+/**
+ * 安全上传图片并统一保存为 PNG，返回提示文案
+ */
+function upload_site_image($file, $dest){
+	if(empty($file) || !isset($file['error']) || $file['error']!==UPLOAD_ERR_OK){
+		return '上传失败：未选择文件或上传出错';
+	}
+	if(!is_uploaded_file($file['tmp_name'])){
+		return '上传失败：非法文件来源';
+	}
+	if($file['size']<=0 || $file['size']>5*1024*1024){
+		return '上传失败：文件大小需在 5MB 以内';
+	}
+	$ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+	$allow = array('png','jpg','jpeg','gif','webp','bmp');
+	if(!in_array($ext, $allow, true)){
+		return '上传失败：仅支持 png/jpg/jpeg/gif/webp/bmp';
+	}
+	$info = @getimagesize($file['tmp_name']);
+	if($info===false || empty($info[2])){
+		return '上传失败：文件不是有效图片';
+	}
+	$dir = dirname($dest);
+	if(!is_dir($dir) && !@mkdir($dir, 0755, true)){
+		return '上传失败：目录不可写';
+	}
+	if(!@move_uploaded_file($file['tmp_name'], $dest) && !@copy($file['tmp_name'], $dest)){
+		return '上传失败：无法写入目标文件';
+	}
+	@chmod($dest, 0644);
+	return '成功上传文件！（可能需要清空浏览器缓存才能看到效果，按 Ctrl+F5 刷新）';
 }
 ?>

@@ -290,12 +290,8 @@ echo '<div class="panel panel-default">
 <div class="panel-body">提示：部分模板不显示logo图片，是正常现象！<br/>';
 if($_POST['s']==1){
 if(!checkRefererHost())exit();
-$extension=explode('.',$_FILES['file']['name']);
-if (($length = count($extension)) > 1) {
-$ext = strtolower($extension[$length - 1]);
-}
-copy($_FILES['file']['tmp_name'], ROOT.'assets/img/logo_'.$userrow['zid'].'.png');
-echo "成功上传文件!<br>（可能需要清空浏览器缓存才能看到效果，按Ctrl+F5即可一键刷新缓存）";
+$msg = upload_site_image($_FILES['file'], ROOT.'assets/img/logo_'.$userrow['zid'].'.png');
+echo $msg.'<br/>';
 }
 if(file_exists(ROOT.'assets/img/logo_'.$userrow['zid'].'.png')){
 	$logo = '../assets/img/logo_'.$userrow['zid'].'.png';
@@ -311,12 +307,8 @@ echo '<div class="panel panel-default">
 <div class="panel-body">';
 if($_POST['s']==1){
 if(!checkRefererHost())exit();
-$extension=explode('.',$_FILES['shoukuan']['name']);
-if (($length = count($extension)) > 1) {
-$ext = strtolower($extension[$length - 1]);
-}
-copy($_FILES['shoukuan']['tmp_name'], ROOT.'assets/img/skimg/sk_'.$userrow['zid'].'.png');
-echo "成功上传文件!<br>（可能需要清空浏览器缓存才能看到效果，按Ctrl+F5即可一键刷新缓存）";
+$msg = upload_site_image($_FILES['shoukuan'], ROOT.'assets/img/skimg/sk_'.$userrow['zid'].'.png');
+echo $msg.'<br/>';
 }
 if(file_exists(ROOT.'assets/img/skimg/sk_'.$userrow['zid'].'.png')){
 	$logo = '../assets/img/skimg/sk_'.$userrow['zid'].'.png';
@@ -337,12 +329,8 @@ echo '<div class="panel panel-default">
 <div class="panel-body">';
 if($_POST['s']==1){
 if(!checkRefererHost())exit();
-$extension=explode('.',$_FILES['wxqrcode']['name']);
-if (($length = count($extension)) > 1) {
-$ext = strtolower($extension[$length - 1]);
-}
-copy($_FILES['wxqrcode']['tmp_name'], ROOT.'assets/img/qrcode/wxqrcode_'.$userrow['zid'].'.png');
-echo "成功上传文件!<br>（可能需要清空浏览器缓存才能看到效果，按Ctrl+F5即可一键刷新缓存）";
+$msg = upload_site_image($_FILES['wxqrcode'], ROOT.'assets/img/qrcode/wxqrcode_'.$userrow['zid'].'.png');
+echo $msg.'<br/>';
 }
 if(file_exists(ROOT.'assets/img/qrcode/wxqrcode_'.$userrow['zid'].'.png')){
 	$wxqrcode = '<br><img src="../assets/img/qrcode/wxqrcode_'.$userrow['zid'].'.png" style="max-width:30%">';
