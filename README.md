@@ -38,12 +38,3 @@ __使用协议__
 * 此系统仅供个人学习、研究之用，请勿用于商业用途。
 * 不提供任何技术支持。
 * 在您下载源码后视为您已经了解使用协议并知晓法律协议。
----
-
-[IDC、支付服务商] 
-* 小白云-云服务器 : https://www.xiaobaiyun.cn/
-* 我爱支付，让交易更有价值 : https://www.52zhifu.com/
-  
----- 
-> [QQ交流群][2025-09-06]  http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=_JJpOEVZBG4rcH_5laqC54CMJS5Wmwhf&authKey=Zxqa%2Fe2e9FdnnRcpCJGPfH%2F8Jw%2Bh6auIMmuR0EunyVgM6qP4JfsfCQpgHjQ4BQuw&noverify=0&group_code=811567663
-> [接口助手]  https://open-api.qqzwb.com/  
