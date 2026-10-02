@@ -50,3 +50,4 @@ if(!defined('IN_CRONLITE'))exit();
     </div>
   </div>
 </div>
+<?php include ROOT.'includes/ai_widget_inc.php'; ?>

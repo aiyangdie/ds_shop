@@ -510,5 +510,6 @@ $class_show_num = intval($conf['index_class_num_style'])?intval($conf['index_cla
 <script src="<?php echo $cdnserver?>assets/store/js/foxui.js"></script>
 <script src="<?php echo $cdnserver?>assets/store/js/layui.flow.js"></script>
 <script src="<?php echo $cdnserver?>assets/store/js/index.js?ver=<?php echo VERSION ?>"></script>
+<?php include ROOT.'includes/ai_widget_inc.php'; ?>
 </body>
 </html>

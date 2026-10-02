@@ -313,5 +313,6 @@ if($total_page!=$page){?>
 <script src="<?php echo $cdnpublic ?>jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
 <script src="<?php echo $cdnpublic?>layui/2.5.7/layui.all.js"></script>
 <script src="<?php echo $cdnserver ?>assets/store/js/query.js"></script>
+<?php include ROOT.'includes/ai_widget_inc.php'; ?>
 </body>
 </html>

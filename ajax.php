@@ -64,12 +64,27 @@ function validate_order_inputs($inputs, &$inputvalue, &$inputvalue2, &$inputvalu
 	}
 }
 
+/** 模拟支付仅允许配置明确开启，并且请求直接来自本机回环地址 */
+function local_testpay_enabled() {
+	global $conf;
+	if (!isset($conf['local_testpay']) || intval($conf['local_testpay']) !== 1) {
+		return false;
+	}
+	$remote = isset($_SERVER['REMOTE_ADDR']) ? trim($_SERVER['REMOTE_ADDR']) : '';
+	if ($remote !== '127.0.0.1' && $remote !== '::1') {
+		return false;
+	}
+	$host = isset($_SERVER['HTTP_HOST']) ? strtolower(trim($_SERVER['HTTP_HOST'])) : '';
+	$host = preg_replace('/:\d+$/', '', $host);
+	return $host === '127.0.0.1' || $host === 'localhost' || $host === '[::1]';
+}
+
 /** 本地无支付通道时附加「模拟支付」按钮 */
 function build_pay_result($trade_no, $need, $extra = []) {
 	global $conf, $islogin2, $userrow;
 	$paymsg = isset($conf['paymsg']) ? $conf['paymsg'] : '';
 	$has_pay = intval($conf['alipay_api']) > 0 || intval($conf['wxpay_api']) > 0 || intval($conf['qqpay_api']) > 0 || $islogin2;
-	if (!$has_pay) {
+	if (!$has_pay && local_testpay_enabled()) {
 		$tn = htmlspecialchars($trade_no, ENT_QUOTES);
 		$paymsg .= '<button type="button" class="btn btn-success btn-block" style="margin-top:10px;" onclick="(function(o){var i=layer.msg(\'模拟支付中...\',{icon:16,shade:0.5,time:20000});$.post(\'ajax.php?act=testpay\',{orderid:o},function(d){layer.close(i);if(d.code==1||d.code==-2){alert(d.msg);location.href=\'?buyok=1\';}else{layer.alert(d.msg||\'支付失败\');}},\'json\').fail(function(){layer.close(i);layer.alert(\'请求失败\');});})(\''.$tn.'\')">本地模拟支付（对接测试）</button>';
 	}
@@ -94,6 +109,7 @@ function build_pay_result($trade_no, $need, $extra = []) {
 switch($act){
 case 'testpay':
 	// 本地无支付通道时的模拟支付（仅用于对接调试）
+	if (!local_testpay_enabled()) exit('{"code":403,"msg":"模拟支付未开启或仅允许本机访问"}');
 	$orderid=isset($_POST['orderid'])?daddslashes($_POST['orderid']):exit('{"code":-1,"msg":"订单号未知"}');
 	$srow=$DB->getRow("SELECT * FROM pre_pay WHERE trade_no=:orderid LIMIT 1", [':orderid'=>$orderid]);
 	if(!$srow['trade_no'] || $srow['tid']==-1)exit('{"code":-1,"msg":"订单号不存在！"}');

@@ -11,7 +11,7 @@
 	</div>
 	</div>
     <div id="loading"></div> 
-	
+<?php include ROOT.'includes/ai_widget_inc.php'; ?>
 </body>
 	
 </html>

@@ -1,0 +1,4 @@
+tools/appbuild/jobs/*
+!tools/appbuild/jobs/.gitkeep
+*.keystore
+local.properties

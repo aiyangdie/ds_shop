@@ -11,6 +11,12 @@ php_local_error.log
 _dbg.txt
 .playwright-mcp/
 supplier/data/*.log
+supplier/data/*.lock
+tools/appbuild/env.local.php
+tools/appbuild/gradle-*/
+tools/appbuild/*.zip
+tools/appbuild/jobs/*
+!tools/appbuild/jobs/.gitkeep
 
 # local unrelated
 _gh_profile/

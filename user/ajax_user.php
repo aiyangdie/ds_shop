@@ -264,12 +264,21 @@ case 'usekm':
 	exit('{"code":-1,"msg":"充值失败'.$DB->error().'"}');
 break;
 case 'app_upload':
-	if(!$conf['appcreate_open'] || !$conf['appcreate_key'])exit('{"code":-1,"msg":"未开启分站自助生成APP功能"}');
+	$localMode = \lib\AppFactory::isLocalMode($conf);
+	if(!$conf['appcreate_open'] || (!$localMode && !$conf['appcreate_key']))exit('{"code":-1,"msg":"未开启分站自助生成APP功能"}');
 	if(!$conf['appcreate_diy'])exit('{"code":-1,"msg":"未开启自定义图标和启动图"}');
 	$file = $_FILES['file'];
 	$type = strtolower(substr($file['name'], strrpos($file['name'], '.') + 1));
 	if (!in_array($type, ['jpg', 'jpeg', 'png'])) {
 		exit(json_encode(['code' => -1, 'msg' => '上传图片格式错误']));
+	}
+	if ($localMode) {
+		$factory = new \lib\AppFactory($DB, $conf);
+		$path = $factory->saveUpload($file['tmp_name'], $file['name'], isset($_POST['kind']) ? $_POST['kind'] : 'icon');
+		if ($path) {
+			exit(json_encode(['code' => 0, 'msg' => '图片上传成功', 'fileid' => $path, 'url' => '/' . ltrim($path, '/')]));
+		}
+		exit(json_encode(['code' => -1, 'msg' => $factory->msg ?: '上传失败']));
 	}
 	$path = sys_get_temp_dir().'/'.md5_file($file['tmp_name']).'.'.$type;
 	if (!move_uploaded_file($file['tmp_name'], $path)) {
@@ -283,10 +292,10 @@ case 'app_upload':
 	}
 break;
 case 'app_submit':
-	if(!$conf['appcreate_open'] || !$conf['appcreate_key'])exit('{"code":-1,"msg":"未开启分站自助生成APP功能"}');
+	$localMode = \lib\AppFactory::isLocalMode($conf);
+	if(!$conf['appcreate_open'] || (!$localMode && !$conf['appcreate_key']))exit('{"code":-1,"msg":"未开启分站自助生成APP功能"}');
 	$price = $userrow['power']==2?$conf['appcreate_price2']:$conf['appcreate_price'];
     if ($price>0 && $userrow['rmb']<$price)exit('{"code":-1,"msg":"你的余额不足，生成APP需要'.$price.'元"}');
-	$app = new \lib\AppCreate($conf['appcreate_key']);
 	$name=trim(daddslashes($_POST['name']));
 	$url=trim(daddslashes($_POST['url']));
 	if(empty($name))exit('{"code":-1,"msg":"应用名称不能为空"}');
@@ -297,14 +306,43 @@ case 'app_submit':
 	if(empty($url))exit('{"code":-1,"msg":"应用网址不能为空"}');
 	if(!strpos($url,'.'))exit('{"code":-1,"msg":"应用网址不正确"}');
 	if(isset($_SESSION['appurl']) && $_SESSION['appurl']==$url)exit(json_encode(['code' => -1, 'msg' => '你已经生成过了，请在"我的生成"中查看。']));
+	$icon = '1';
+	$background = '2';
+	$iconPath = '';
+	$splashPath = '';
 	if($conf['appcreate_diy']==1){
 		$icon = !empty($_POST['icon'])?trim($_POST['icon']):'1';
 		$background = !empty($_POST['background'])?trim($_POST['background']):'2';
-	}else{
-		$icon = '1';
-		$background = '2';
+		if ($localMode) {
+			if ($icon !== '1' && strpos($icon, 'assets/uploads/apps/') === 0) $iconPath = $icon;
+			if ($background !== '2' && strpos($background, 'assets/uploads/apps/') === 0) $splashPath = $background;
+		}
 	}
 	$theme = $conf['appcreate_theme'];
+	if ($localMode) {
+		$factory = new \lib\AppFactory($DB, $conf);
+		$hosts = array($userrow['domain']);
+		if (!empty($userrow['domain2'])) $hosts[] = $userrow['domain2'];
+		$id = $factory->submit(array(
+			'name' => $name,
+			'url' => $url,
+			'zid' => intval($userrow['zid']),
+			'theme' => $theme,
+			'icon_path' => $iconPath,
+			'splash_path' => $splashPath,
+			'nonav' => !empty($conf['appcreate_nonav']),
+			'allowed_hosts' => $hosts,
+		));
+		if ($id) {
+			$_SESSION['appurl'] = $url;
+			if($price>0){
+				changeUserMoney($userrow['zid'], $price, false, '消费', '自助生成APP');
+			}
+			exit(json_encode(['code' => 0, 'msg' => '已加入本地打包队列，请稍后在「我的生成」查看（需打包机运行 worker）。', 'taskid' => $id]));
+		}
+		exit(json_encode(['code' => -1, 'msg' => $factory->msg ?: '提交失败']));
+	}
+	$app = new \lib\AppCreate($conf['appcreate_key']);
 	if($app->submittask($name, $url, $icon, $background, $theme, $conf['appcreate_nonav'])){
 		$_SESSION['appurl'] = $url;
 		if($price>0){
@@ -317,11 +355,33 @@ case 'app_submit':
 	}
 break;
 case 'app_query':
-	if(!$conf['appcreate_open'] || !$conf['appcreate_key'])exit('{"code":-1,"msg":"未开启分站自助生成APP功能"}');
-	$app = new \lib\AppCreate($conf['appcreate_key']);
+	$localMode = \lib\AppFactory::isLocalMode($conf);
+	if(!$conf['appcreate_open'] || (!$localMode && !$conf['appcreate_key']))exit('{"code":-1,"msg":"未开启分站自助生成APP功能"}');
 	$url = (is_https() ? 'https://' : 'http://').$userrow['domain'];
 	$url=isset($_SESSION['appurl'])?$_SESSION['appurl']:$url;
 	$domain = parse_url($url)['host'];
+	if ($localMode) {
+		$factory = new \lib\AppFactory($DB, $conf);
+		$res = $factory->queryForApi($domain);
+		if (!$res) {
+			// 也按 zid 找最近一条
+			$row = $DB->getRow("SELECT * FROM pre_apps WHERE zid='".intval($userrow['zid'])."' ORDER BY id DESC LIMIT 1");
+			if ($row) $res = $factory->queryForApi(intval($row['id']));
+		}
+		if ($res) {
+			$appurl = '';
+			$android_url = isset($res['android_url']) ? $res['android_url'] : '';
+			$ios_url = '';
+			if (intval($res['status']) === 1 && $android_url) {
+				$appurl = '/?mod=app&id=' . intval($res['id']);
+				$DB->exec("UPDATE `pre_site` SET `appurl`=:appurl WHERE `zid`='{$userrow['zid']}'", [':appurl'=>$appurl]);
+			}
+			$result=array("code"=>0,"msg"=>"succ","url"=>$url,"download_url"=>$appurl,"download_url_show"=>$url.$appurl,"android_url"=>$android_url,"ios_url"=>$ios_url,"data"=>$res,"mode"=>"local");
+			exit(json_encode($result));
+		}
+		exit(json_encode(['code' => -1, 'msg' => $factory->msg ?: '暂无任务']));
+	}
+	$app = new \lib\AppCreate($conf['appcreate_key']);
 	$res=$app->queryurl($url);
 	if($res && is_array($res)){
 		$appurl = "";

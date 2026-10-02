@@ -306,4 +306,5 @@ $(document).on('pjax:complete', function () {
 	$(".page-loading").css('display','none');
 });
 </script>
+<?php include ROOT.'includes/ai_widget_inc.php'; ?>
 </body></html>

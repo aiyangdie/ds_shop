@@ -14,8 +14,22 @@ $ORDERS_FILE = $DATA_DIR . '/orders.json';
 $USER = 'supplier';
 $PASS = 'supplier123';
 
+// 该目录只用于本机联调，避免误上传后从公网访问演示账号和卡密。
+$REMOTE_ADDR = isset($_SERVER['REMOTE_ADDR']) ? trim($_SERVER['REMOTE_ADDR']) : '';
+if ($REMOTE_ADDR !== '127.0.0.1' && $REMOTE_ADDR !== '::1') {
+    http_response_code(403);
+    exit(json_encode(['code' => 403, 'message' => '本地演示货源仅允许回环地址访问'], JSON_UNESCAPED_UNICODE));
+}
+
 if (!is_dir($DATA_DIR)) {
     @mkdir($DATA_DIR, 0755, true);
+}
+
+// 单进程内置服务器之外也串行化读改写，防止 JSON 订单和卡密被并发覆盖。
+$LOCK_HANDLE = @fopen($DATA_DIR . '/supplier.lock', 'c+');
+if (!$LOCK_HANDLE || !@flock($LOCK_HANDLE, LOCK_EX)) {
+    http_response_code(503);
+    exit(json_encode(['code' => 503, 'message' => '货源数据暂时不可用'], JSON_UNESCAPED_UNICODE));
 }
 
 function read_json($file, $default = []) {
@@ -25,7 +39,7 @@ function read_json($file, $default = []) {
 }
 
 function write_json($file, $data) {
-    file_put_contents($file, json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+    return file_put_contents($file, json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), LOCK_EX) !== false;
 }
 
 function auth_ok($user, $pass) {
@@ -74,6 +88,12 @@ $act = isset($_GET['act']) ? $_GET['act'] : '';
 $user = isset($_POST['user']) ? trim($_POST['user']) : '';
 $pass = isset($_POST['pass']) ? trim($_POST['pass']) : '';
 
+// 所有演示接口统一鉴权，商品列表、分类和订单查询也不例外。
+if (!auth_ok($user, $pass)) {
+    http_response_code(401);
+    exit(json_encode(['code' => -1, 'message' => '用户名或密码不正确'], JSON_UNESCAPED_UNICODE));
+}
+
 $goods = read_json($GOODS_FILE);
 $cards = read_json($CARDS_FILE);
 $orders = read_json($ORDERS_FILE);
@@ -88,11 +108,6 @@ if ($act === 'classlist') {
 }
 
 if ($act === 'goodslistbycid') {
-    if ($user !== '' || $pass !== '') {
-        if (!auth_ok($user, $pass)) {
-            exit(json_encode(['code' => -1, 'message' => '用户名或密码不正确'], JSON_UNESCAPED_UNICODE));
-        }
-    }
     $cid = intval(isset($_POST['cid']) ? $_POST['cid'] : 0);
     $data = [];
     foreach ($goods as $g) {
@@ -112,11 +127,6 @@ if ($act === 'goodslistbycid') {
 }
 
 if ($act === 'goodslist') {
-    if ($user !== '' || $pass !== '') {
-        if (!auth_ok($user, $pass)) {
-            exit(json_encode(['code' => -1, 'message' => '用户名或密码不正确'], JSON_UNESCAPED_UNICODE));
-        }
-    }
     $data = [];
     foreach ($goods as $g) {
         $stock = $g['isfaka'] ? stock_of($g['tid'], $cards) : null;
@@ -136,11 +146,6 @@ if ($act === 'goodslist') {
 }
 
 if ($act === 'goodsdetails') {
-    if ($user !== '' || $pass !== '') {
-        if (!auth_ok($user, $pass)) {
-            exit(json_encode(['code' => -1, 'message' => '用户名或密码不正确'], JSON_UNESCAPED_UNICODE));
-        }
-    }
     $tid = intval(isset($_POST['tid']) ? $_POST['tid'] : 0);
     $tool = null;
     foreach ($goods as $g) {
@@ -161,9 +166,6 @@ if ($act === 'goodsdetails') {
 }
 
 if ($act === 'pay') {
-    if (!auth_ok($user, $pass)) {
-        exit(json_encode(['code' => -1, 'message' => '用户名或密码不正确'], JSON_UNESCAPED_UNICODE));
-    }
     $tid = intval(isset($_POST['tid']) ? $_POST['tid'] : 0);
     $num = max(1, intval(isset($_POST['num']) ? $_POST['num'] : 1));
     $input1 = isset($_POST['input1']) ? trim($_POST['input1']) : '';

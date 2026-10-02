@@ -145,4 +145,5 @@ layui.use('form', function(){
 	});
 });
 </script>
+<?php include ROOT.'includes/ai_widget_inc.php'; ?>
 </body></html>

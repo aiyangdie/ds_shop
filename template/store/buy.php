@@ -608,5 +608,6 @@ function goback()
 }
 </script>
 <script src="assets/store/js/main.js?ver=<?php echo VERSION ?>"></script>
+<?php include ROOT.'includes/ai_widget_inc.php'; ?>
 </body>
 </html>

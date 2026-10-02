@@ -341,7 +341,7 @@ if($admin_cdnpublic==1){
                                 </li>
                                 <li>
                                     <a class="<?php echo checkIfActive("app_list") ?>" href="./app_list.php">
-                                        APP列表
+                                        APP管理中心
                                     </a>
                                 </li>
                                 <?php if ($conf['fenzhan_tixian'] == 1) { ?>
@@ -376,7 +376,7 @@ if($admin_cdnpublic==1){
                             </a>
                         </li>
 
-                        <li class="<?php echo checkIfActive('ai,ai_set,ai_log') ?>">
+                        <li class="<?php echo checkIfActive('ai,ai_set,ai_log,ai_cs') ?>">
                             <a href="javascript:void(0)" class="sidebar-nav-menu"><i
                                         class="fa fa-chevron-left sidebar-nav-indicator sidebar-nav-mini-hide"></i><i
                                         class="fa fa-magic sidebar-nav-icon"></i><span class="sidebar-nav-mini-hide">AI助手</span></a>
@@ -384,6 +384,30 @@ if($admin_cdnpublic==1){
                                 <li>
                                     <a class="<?php echo checkIfActive('ai,') ?>" href="./ai.php">
                                         对话操作
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="<?php echo checkIfActive('ai_cs') ?>" href="./ai_cs.php">
+                                        客服中心<?php
+                                        $aiCsPending = 0;
+                                        $woPending = 0;
+                                        try {
+                                            $aiCsPending = intval($DB->getColumn("SELECT count(*) FROM pre_ai_cs WHERE status=0"));
+                                        } catch (Exception $e) {
+                                            $aiCsPending = 0;
+                                        } catch (Throwable $e) {
+                                            $aiCsPending = 0;
+                                        }
+                                        try {
+                                            $woPending = intval($DB->getColumn("SELECT count(*) FROM pre_workorder WHERE status=0"));
+                                        } catch (Exception $e) {
+                                            $woPending = 0;
+                                        } catch (Throwable $e) {
+                                            $woPending = 0;
+                                        }
+                                        $hubBadge = $aiCsPending + $woPending;
+                                        if ($hubBadge > 0) echo ' <span class="label label-danger">' . $hubBadge . '</span>';
+                                        ?>
                                     </a>
                                 </li>
                                 <li>

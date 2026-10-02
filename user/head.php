@@ -169,6 +169,14 @@ if($userrow['status']==0){
                 </a>
               </li>
 			  <?php }?>
+			  <?php if(!empty($conf['ai_enabled']) && intval($conf['ai_enabled'])===1 && (!isset($conf['ai_user_enabled']) || intval($conf['ai_user_enabled'])===1)){?>
+			  <li class="<?php echo checkIfActive('ai')?>">
+                <a href="./ai.php">
+                  <i class="fa fa-magic"></i>
+                  <span>AI助手</span>
+                </a>
+              </li>
+			  <?php }?>
 			  <?php if($userrow['power']==0&&!empty($conf['appurl'])){?>
 			  <li class="">
                 <a href="<?php echo $conf['appurl']?>">

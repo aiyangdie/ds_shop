@@ -41,6 +41,29 @@ function ai_get_runtime_conf($conf)
         'api_token_set' => !empty($conf['ai_api_token']),
         'session_limit' => isset($conf['ai_session_limit']) ? intval($conf['ai_session_limit']) : 40,
         'message_limit' => isset($conf['ai_message_limit']) ? intval($conf['ai_message_limit']) : 80,
+        'sitename' => isset($conf['sitename']) && $conf['sitename'] !== '' ? $conf['sitename'] : '本站',
+        'assistant_name' => !empty($conf['ai_assistant_name']) ? $conf['ai_assistant_name'] : '助手',
+        'user_enabled' => !isset($conf['ai_user_enabled']) || intval($conf['ai_user_enabled']) === 1,
+        'shop_enabled' => !isset($conf['ai_shop_enabled']) || intval($conf['ai_shop_enabled']) === 1,
+        'shop_rate' => isset($conf['ai_shop_rate']) ? intval($conf['ai_shop_rate']) : 20,
+        'shop_daily' => isset($conf['ai_shop_daily']) ? intval($conf['ai_shop_daily']) : 100,
+        'user_prompt' => isset($conf['ai_user_prompt']) ? $conf['ai_user_prompt'] : '',
+        'shop_prompt' => isset($conf['ai_shop_prompt']) ? $conf['ai_shop_prompt'] : '',
+        'storage_driver' => isset($conf['ai_storage_driver']) ? $conf['ai_storage_driver'] : 'local',
+        'storage_ak_set' => !empty($conf['ai_storage_ak']),
+        'storage_sk_set' => !empty($conf['ai_storage_sk']),
+        'storage_bucket' => isset($conf['ai_storage_bucket']) ? $conf['ai_storage_bucket'] : '',
+        'storage_region' => isset($conf['ai_storage_region']) ? $conf['ai_storage_region'] : '',
+        'storage_endpoint' => isset($conf['ai_storage_endpoint']) ? $conf['ai_storage_endpoint'] : '',
+        'storage_cdn' => isset($conf['ai_storage_cdn']) ? $conf['ai_storage_cdn'] : '',
+    );
+}
+
+function ai_site_context($conf)
+{
+    return array(
+        'sitename' => isset($conf['sitename']) && $conf['sitename'] !== '' ? $conf['sitename'] : '本站',
+        'assistant_name' => !empty($conf['ai_assistant_name']) ? $conf['ai_assistant_name'] : '助手',
     );
 }
 
@@ -63,12 +86,18 @@ switch ($act) {
         break;
 
     case 'save_config':
-        $fields = array('ai_enabled', 'ai_provider', 'ai_api_base', 'ai_model', 'ai_temperature', 'ai_max_tokens', 'ai_system_prompt', 'ai_session_limit', 'ai_message_limit');
+        $fields = array('ai_enabled', 'ai_provider', 'ai_api_base', 'ai_model', 'ai_temperature', 'ai_max_tokens', 'ai_system_prompt', 'ai_session_limit', 'ai_message_limit', 'ai_assistant_name', 'ai_user_enabled', 'ai_shop_enabled', 'ai_shop_rate', 'ai_shop_daily', 'ai_user_prompt', 'ai_shop_prompt', 'ai_storage_driver', 'ai_storage_bucket', 'ai_storage_region', 'ai_storage_endpoint', 'ai_storage_cdn');
         foreach ($fields as $f) {
             if (isset($_POST[$f])) saveSetting($f, $_POST[$f]);
         }
         if (isset($_POST['ai_api_key']) && $_POST['ai_api_key'] !== '' && $_POST['ai_api_key'] !== '***keep***') {
             saveSetting('ai_api_key', trim($_POST['ai_api_key']));
+        }
+        if (isset($_POST['ai_storage_ak']) && $_POST['ai_storage_ak'] !== '' && $_POST['ai_storage_ak'] !== '***keep***') {
+            saveSetting('ai_storage_ak', trim($_POST['ai_storage_ak']));
+        }
+        if (isset($_POST['ai_storage_sk']) && $_POST['ai_storage_sk'] !== '' && $_POST['ai_storage_sk'] !== '***keep***') {
+            saveSetting('ai_storage_sk', trim($_POST['ai_storage_sk']));
         }
         if (isset($_POST['ai_api_token'])) {
             $tok = trim($_POST['ai_api_token']);
@@ -103,22 +132,22 @@ switch ($act) {
 
     case 'sessions':
         $c = ai_get_runtime_conf($conf);
-        $list = $store->listSessions($c['session_limit']);
+        $list = $store->listSessions($c['session_limit'], 'admin', '0');
         exit(json_encode(array('code' => 0, 'data' => $list, 'limit' => $c['session_limit']), JSON_UNESCAPED_UNICODE));
         break;
 
     case 'session_create':
         $c = ai_get_runtime_conf($conf);
         $title = isset($_POST['title']) ? trim($_POST['title']) : '新对话';
-        $id = $store->createSession($title, $c['model']);
-        $store->pruneSessions($c['session_limit']);
-        exit(json_encode(array('code' => 0, 'id' => $id, 'data' => $store->getSession($id)), JSON_UNESCAPED_UNICODE));
+        $id = $store->createSession($title, $c['model'], 'admin', '0');
+        $store->pruneSessions($c['session_limit'], 'admin', '0');
+        exit(json_encode(array('code' => 0, 'id' => $id, 'data' => $store->getSession($id, 'admin', '0')), JSON_UNESCAPED_UNICODE));
         break;
 
     case 'session_get':
         $id = intval(isset($_GET['id']) ? $_GET['id'] : (isset($_POST['id']) ? $_POST['id'] : 0));
         $c = ai_get_runtime_conf($conf);
-        $session = $store->getSession($id);
+        $session = $store->getSession($id, 'admin', '0');
         if (!$session || intval($session['status']) !== 1) exit(json_encode(array('code' => -1, 'msg' => '对话不存在')));
         $messages = $store->listMessages($id, $c['message_limit']);
         $logs = $store->listLogs(array('session_id' => $id, 'limit' => 100));
@@ -128,13 +157,13 @@ switch ($act) {
     case 'session_rename':
         $id = intval(isset($_POST['id']) ? $_POST['id'] : 0);
         $title = isset($_POST['title']) ? trim($_POST['title']) : '';
-        if (!$store->renameSession($id, $title)) exit(json_encode(array('code' => -1, 'msg' => '重命名失败')));
+        if (!$store->renameSession($id, $title, 'admin', '0')) exit(json_encode(array('code' => -1, 'msg' => '重命名失败')));
         exit(json_encode(array('code' => 0, 'msg' => '已重命名')));
         break;
 
     case 'session_delete':
         $id = intval(isset($_POST['id']) ? $_POST['id'] : 0);
-        $store->deleteSession($id);
+        $store->deleteSession($id, 'admin', '0');
         exit(json_encode(array('code' => 0, 'msg' => '已删除对话（操作日志仍保留）')));
         break;
 
@@ -157,6 +186,114 @@ switch ($act) {
         exit(json_encode(array('code' => 0, 'data' => $row), JSON_UNESCAPED_UNICODE));
         break;
 
+    case 'cs_list':
+        $opts = array(
+            'status' => isset($_GET['status']) ? $_GET['status'] : '',
+            'keyword' => isset($_GET['keyword']) ? trim($_GET['keyword']) : '',
+            'limit' => isset($_GET['limit']) ? intval($_GET['limit']) : 50,
+        );
+        $list = $store->listCsTickets($opts);
+        exit(json_encode(array('code' => 0, 'data' => $list), JSON_UNESCAPED_UNICODE));
+        break;
+
+    case 'cs_get':
+        $id = intval(isset($_GET['id']) ? $_GET['id'] : 0);
+        $row = $store->getCsTicket($id);
+        if (!$row) exit(json_encode(array('code' => -1, 'msg' => '工单不存在')));
+        exit(json_encode(array('code' => 0, 'data' => $row), JSON_UNESCAPED_UNICODE));
+        break;
+
+    case 'cs_reply':
+        $id = intval(isset($_POST['id']) ? $_POST['id'] : 0);
+        $reply = isset($_POST['reply']) ? trim(strval($_POST['reply'])) : '';
+        $close = !empty($_POST['close']);
+        if ($reply === '') exit(json_encode(array('code' => -1, 'msg' => '回复不能为空')));
+        if (!$store->getCsTicket($id)) exit(json_encode(array('code' => -1, 'msg' => '工单不存在')));
+        $ok = $store->replyCsTicket($id, $reply, 'admin', $close);
+        exit(json_encode(array('code' => $ok ? 0 : -1, 'msg' => $ok ? ($close ? '已回复并完结' : '已回复') : '保存失败')));
+        break;
+
+    case 'cs_messages':
+        $id = intval(isset($_GET['id']) ? $_GET['id'] : (isset($_POST['id']) ? $_POST['id'] : 0));
+        $afterId = intval(isset($_GET['after_id']) ? $_GET['after_id'] : 0);
+        $row = $store->getCsTicket($id);
+        if (!$row) exit(json_encode(array('code' => -1, 'msg' => '会话不存在')));
+        $store->migrateLegacyCsMessages($row);
+        $messages = $store->listCsMessages($id, $afterId, 200);
+        exit(json_encode(array('code' => 0, 'data' => $row, 'messages' => $messages), JSON_UNESCAPED_UNICODE));
+        break;
+
+    case 'cs_send_msg':
+        $id = intval(isset($_POST['id']) ? $_POST['id'] : 0);
+        $text = isset($_POST['message']) ? trim(strval($_POST['message'])) : '';
+        $close = !empty($_POST['close']);
+        $row = $store->getCsTicket($id);
+        if (!$row) exit(json_encode(array('code' => -1, 'msg' => '会话不存在')));
+        if ($text === '' && empty($_POST['media_url'])) {
+            exit(json_encode(array('code' => -1, 'msg' => '消息不能为空')));
+        }
+        $mediaUrl = isset($_POST['media_url']) ? trim(strval($_POST['media_url'])) : '';
+        if ($mediaUrl !== '') {
+            $mid = $store->addCsMessage($id, 'staff', 'image', $text !== '' ? $text : '[图片]', $mediaUrl, 0, 'admin');
+        } else {
+            $mid = $store->addCsMessage($id, 'staff', 'text', $text, '', 0, 'admin');
+        }
+        // 同步旧 reply 字段便于列表摘要
+        $thisReply = $text !== '' ? $text : '[图片]';
+        $DB->exec("UPDATE pre_ai_cs SET reply='" . addslashes(mb_substr($thisReply, 0, 500)) . "',status=1,staff_joined=1,ai_paused=1,operator='admin',updatetime='" . date('Y-m-d H:i:s') . "' WHERE id='$id'");
+        if ($close) {
+            $store->closeCsTicket($id, 'admin');
+        }
+        exit(json_encode(array(
+            'code' => 0,
+            'msg_id' => $mid,
+            'messages' => $store->listCsMessages($id, max(0, $mid - 1), 10),
+            'msg' => $close ? '已发送并完结' : '已发送',
+        ), JSON_UNESCAPED_UNICODE));
+        break;
+
+    case 'cs_close':
+        $id = intval(isset($_POST['id']) ? $_POST['id'] : 0);
+        if (!$store->getCsTicket($id)) exit(json_encode(array('code' => -1, 'msg' => '会话不存在')));
+        $ok = $store->closeCsTicket($id, 'admin');
+        exit(json_encode(array('code' => $ok ? 0 : -1, 'msg' => $ok ? '已完结' : '失败')));
+        break;
+
+    case 'cs_upload':
+        if (empty($_FILES['file']) || !is_uploaded_file($_FILES['file']['tmp_name'])) {
+            exit(json_encode(array('code' => -1, 'msg' => '请选择图片')));
+        }
+        $file = $_FILES['file'];
+        $siteRoot = dirname(__DIR__) . DIRECTORY_SEPARATOR;
+        $siteUrl = '';
+        if (!empty($conf['localurl'])) {
+            $siteUrl = rtrim($conf['localurl'], '/');
+        } elseif (!empty($_SERVER['HTTP_HOST'])) {
+            $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+            $siteUrl = $scheme . '://' . $_SERVER['HTTP_HOST'];
+            // 后台路径修正：去掉 /admin
+            if (substr($siteUrl, -6) === '/admin') $siteUrl = substr($siteUrl, 0, -6);
+        }
+        $mgr = new \lib\Storage\Manager($conf, $siteRoot, $siteUrl);
+        $res = $mgr->uploadCsImage($file['tmp_name'], isset($file['name']) ? $file['name'] : 'img.jpg', isset($file['type']) ? $file['type'] : '');
+        if (empty($res['ok'])) {
+            exit(json_encode(array('code' => -1, 'msg' => isset($res['error']) ? $res['error'] : '上传失败')));
+        }
+        $csId = intval(isset($_POST['cs_id']) ? $_POST['cs_id'] : 0);
+        $msgId = 0;
+        if ($csId > 0 && $store->getCsTicket($csId)) {
+            $msgId = $store->addCsMessage($csId, 'staff', 'image', '[图片]', $res['url'], isset($res['size']) ? intval($res['size']) : 0, 'admin');
+            $DB->exec("UPDATE pre_ai_cs SET reply='[图片]',status=1,staff_joined=1,ai_paused=1,operator='admin',updatetime='" . date('Y-m-d H:i:s') . "' WHERE id='$csId'");
+        }
+        exit(json_encode(array(
+            'code' => 0,
+            'url' => $res['url'],
+            'size' => isset($res['size']) ? intval($res['size']) : 0,
+            'driver' => isset($res['driver']) ? $res['driver'] : 'local',
+            'msg_id' => $msgId,
+        ), JSON_UNESCAPED_UNICODE));
+        break;
+
     case 'chat':
         $c = ai_get_runtime_conf($conf);
         if (!$c['enabled']) exit(json_encode(array('code' => -1, 'msg' => 'AI 未启用，请先在模型配置中开启')));
@@ -170,14 +307,14 @@ switch ($act) {
         if ($userMsg === '') exit(json_encode(array('code' => -1, 'msg' => '消息不能为空')));
 
         if ($sessionId > 0) {
-            $session = $store->getSession($sessionId);
+            $session = $store->getSession($sessionId, 'admin', '0');
             if (!$session || intval($session['status']) !== 1) {
                 exit(json_encode(array('code' => -1, 'msg' => '对话不存在或已删除')));
             }
         } else {
             $title = mb_substr($userMsg, 0, 30);
-            $sessionId = $store->createSession($title, $c['model']);
-            $store->pruneSessions($c['session_limit']);
+            $sessionId = $store->createSession($title, $c['model'], 'admin', '0');
+            $store->pruneSessions($c['session_limit'], 'admin', '0');
         }
 
         // 优先用库内历史，保证刷新后可续聊
@@ -192,12 +329,14 @@ switch ($act) {
 
         try {
             $client = new \lib\Ai\Client($c['api_base'], $c['api_key'], 180);
-            $tools = new \lib\Ai\Tools($DB, $conf, $CACHE);
+            $tools = new \lib\Ai\Tools($DB, $conf, $CACHE, array('scope' => 'admin'));
             $agent = new \lib\Ai\Agent($client, $tools, array(
                 'model' => $c['model'],
                 'temperature' => $c['temperature'],
                 'max_tokens' => $c['max_tokens'],
                 'system_prompt' => $c['system_prompt'],
+                'site' => ai_site_context($conf),
+                'role' => 'admin',
                 'max_rounds' => 8,
                 'on_tool' => function ($item) use ($store, $sessionId, $c, $ip, $requestId, &$turnLogs) {
                     $ok = !empty($item['ok']);
@@ -250,6 +389,13 @@ switch ($act) {
                 $store->touchSession($sessionId, array('title' => mb_substr($userMsg, 0, 30)));
             }
 
+            // 配置可能被 setup_site / update_config 改过，回传最新站名给前端
+            if ($CACHE) {
+                $CACHE->clear();
+                $conf = $CACHE->pre_fetch();
+            }
+            $siteNow = ai_site_context($conf);
+
             exit(json_encode(array(
                 'code' => 0,
                 'session_id' => $sessionId,
@@ -258,6 +404,7 @@ switch ($act) {
                 'turn_logs' => $turnLogs,
                 'usage' => $result['usage'],
                 'request_id' => $requestId,
+                'site' => $siteNow,
             ), JSON_UNESCAPED_UNICODE));
         } catch (Exception $e) {
             $store->addLog(array(
@@ -278,7 +425,7 @@ switch ($act) {
         break;
 
     case 'tools':
-        $tools = new \lib\Ai\Tools($DB, $conf, $CACHE);
+        $tools = new \lib\Ai\Tools($DB, $conf, $CACHE, array('scope' => 'admin'));
         $defs = $tools->definitions();
         $names = array();
         foreach ($defs as $d) {

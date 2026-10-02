@@ -32,3 +32,4 @@ $(function(){
 	$('#dl-menu').dlmenu();
 });
 </script>
+<?php include ROOT.'includes/ai_widget_inc.php'; ?>

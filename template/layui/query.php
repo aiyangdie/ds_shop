@@ -157,4 +157,5 @@ layui.use('element', function(){
 	var element = layui.element;
 });
 </script>
+<?php include ROOT.'includes/ai_widget_inc.php'; ?>
 </body></html>

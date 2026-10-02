@@ -86,8 +86,45 @@ function scollgift(){
     });
   }, 2000);
 }
+function setProductImage(url) {
+	var fallback = 'assets/img/Product/noimg.png';
+	var src = url && String(url).length ? String(url) : ($('#classImg').attr('data-category-image') || fallback);
+	var $img = $('#classImg');
+	if(!$img.length) return;
+	$img.off('error.productimg').on('error.productimg', function () {
+		$(this).off('error.productimg').attr('src', fallback);
+	}).attr('src', src);
+}
+function renderProductThumbs(list) {
+	var $box = $('#productThumbs');
+	if(!$box.length) return;
+	$box.empty();
+	if(!list || !list.length) return;
+	$.each(list, function (i, res) {
+		var img = res.shopimg || $('#classImg').attr('data-category-image') || 'assets/img/Product/noimg.png';
+		var $item = $('<button type="button" class="product-thumb" data-tid="'+res.tid+'" title="'+String(res.name||'').replace(/"/g,'&quot;')+'"></button>');
+		$item.css({
+			width:'64px',height:'64px',padding:0,border:'2px solid #e5e8ed',borderRadius:'10px',
+			overflow:'hidden',background:'#fff',cursor:'pointer'
+		});
+		$item.append($('<img>').attr('src', img).css({width:'100%',height:'100%',objectFit:'cover',display:'block'}).on('error', function(){ this.src='assets/img/Product/noimg.png'; }));
+		$item.on('click', function () {
+			$('#tid').val(String(res.tid)).trigger('change');
+		});
+		$box.append($item);
+	});
+}
+function highlightProductThumb(tid) {
+	$('#productThumbs .product-thumb').css('border-color', '#e5e8ed');
+	if(!tid || tid==='0') return;
+	$('#productThumbs .product-thumb[data-tid="'+tid+'"]').css('border-color', '#1f6feb');
+}
 function getPoint() {
 	if($('#tid option:selected').val()==undefined || $('#tid option:selected').val()=="0"){
+		var categoryImage = $('#classImg').attr('data-category-image') || 'assets/img/Product/noimg.png';
+		setProductImage(categoryImage);
+		$('#productNameTip').text('请选择商品查看图片');
+		highlightProductThumb(0);
 		$('#inputsname').html("");
 		$('#need').val('');
 		$('#display_price').hide();
@@ -101,6 +138,9 @@ function getPoint() {
 	var count = $('#tid option:selected').attr('count');
 	var price = $('#tid option:selected').attr('price');
 	var shopimg = $('#tid option:selected').attr('shopimg');
+	setProductImage(shopimg || $('#classImg').attr('data-category-image') || 'assets/img/Product/noimg.png');
+	$('#productNameTip').text($('#tid option:selected').text() || '');
+	highlightProductThumb($('#tid option:selected').val());
 	var close = $('#tid option:selected').attr('close');
 	$('#display_price').show();
 	if(multi==1 && count>1){
@@ -927,6 +967,8 @@ $(".nav-tabs,.backType").click(function(){
 	history.replaceState({}, null, './');
 	$("#goodType").show('normal');
 	$("#goodTypeContent").hide('normal');
+	$("#productThumbs").empty();
+	$("#productNameTip").text('请选择商品查看图片');
 })
 $("#showSearchBar").click(function () {
 	$("#display_selectclass").slideToggle();
@@ -952,10 +994,16 @@ $("#doSearch").click(function () {
 			if(data.code == 0){
 				var num = 0;
 				$.each(data.data, function (i, res) {
-					$("#tid").append('<option value="'+res.tid+'" cid="'+res.cid+'" price="'+res.price+'" desc="'+escape(res.desc)+'" alert="'+escape(res.alert)+'" inputname="'+res.input+'" inputsname="'+(res.inputs?res.inputs:'')+'" multi="'+res.multi+'" isfaka="'+res.isfaka+'" count="'+res.value+'" close="'+res.close+'" prices="'+res.prices+'" max="'+res.max+'" min="'+res.min+'" stock="'+res.stock+'">'+res.name+'</option>');
+					$("#tid").append('<option value="'+res.tid+'" cid="'+res.cid+'" price="'+res.price+'" shopimg="'+(res.shopimg || '')+'" desc="'+escape(res.desc)+'" alert="'+escape(res.alert)+'" inputname="'+res.input+'" inputsname="'+(res.inputs?res.inputs:'')+'" multi="'+res.multi+'" isfaka="'+res.isfaka+'" count="'+res.value+'" close="'+res.close+'" prices="'+res.prices+'" max="'+res.max+'" min="'+res.min+'" stock="'+res.stock+'">'+res.name+'</option>');
 					num++;
 				});
-				$("#tid").val(0);
+				renderProductThumbs(data.data || []);
+				$("#productImagePanel").show();
+				if(num > 0){
+					$("#tid").val(String(data.data[0].tid));
+				}else{
+					$("#tid").val(0);
+				}
 				getPoint();
 				if(num==0 && cid!=0)layer.msg('<option value="0">没有搜索到相关商品</option>', {icon: 2, time: 500});
 				else layer.msg('成功搜索到'+num+'个商品', {icon: 1, time: 1000});
@@ -986,16 +1034,22 @@ $("#cid").change(function () {
 			if(data.code == 0){
 				if(data.info!=null){
 					$("#className").html(data.info.name);
-					$("#classImg").attr('src',data.info.shopimg);
+					var categoryImage = data.info.shopimg || 'assets/img/Product/noimg.png';
+					$("#classImg").attr('data-category-image', categoryImage);
+					setProductImage(categoryImage);
 				}
 				var num = 0;
 				$.each(data.data, function (i, res) {
-					$("#tid").append('<option value="'+res.tid+'" cid="'+res.cid+'" price="'+res.price+'" desc="'+escape(res.desc)+'" alert="'+escape(res.alert)+'" inputname="'+res.input+'" inputsname="'+(res.inputs?res.inputs:'')+'" multi="'+res.multi+'" isfaka="'+res.isfaka+'" count="'+res.value+'" close="'+res.close+'" prices="'+res.prices+'" max="'+res.max+'" min="'+res.min+'" stock="'+res.stock+'">'+res.name+'</option>');
+					$("#tid").append('<option value="'+res.tid+'" cid="'+res.cid+'" price="'+res.price+'" shopimg="'+(res.shopimg || '')+'" desc="'+escape(res.desc)+'" alert="'+escape(res.alert)+'" inputname="'+res.input+'" inputsname="'+(res.inputs?res.inputs:'')+'" multi="'+res.multi+'" isfaka="'+res.isfaka+'" count="'+res.value+'" close="'+res.close+'" prices="'+res.prices+'" max="'+res.max+'" min="'+res.min+'" stock="'+res.stock+'">'+res.name+'</option>');
 					num++;
 				});
+				renderProductThumbs(data.data || []);
+				$("#productImagePanel").show();
 				if($_GET["tid"] && $_GET["cid"]==cid){
 					var tid = parseInt($_GET["tid"]);
 					$("#tid").val(tid);
+				}else if(num > 0){
+					$("#tid").val(String(data.data[0].tid));
 				}else{
 					$("#tid").val(0);
 				}
@@ -1471,6 +1525,17 @@ $.cookie("counter", visits, 24*60*60*30);
 
 if($('#audio-play').is(':visible')){
 	audio_init.play();
+}
+
+// 前台 AI 客服浮窗（由 ajax_ai.php bootstrap 决定是否显示）
+if (!window.__AI_WIDGET_LOADED) {
+	if (!window.AI_WIDGET) {
+		window.AI_WIDGET = { endpoint: 'ajax_ai.php', css: 'assets/css/ai-widget.css?ver=' + Date.now() };
+	}
+	var s = document.createElement('script');
+	s.src = 'assets/js/ai-widget.js?ver=' + Date.now();
+	s.async = true;
+	document.body.appendChild(s);
 }
 
 });

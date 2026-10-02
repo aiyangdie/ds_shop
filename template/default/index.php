@@ -218,7 +218,7 @@ $(function() {
 	$('a[data-toggle="popover"]').popover();
 });
 </script>
-<script src="assets/js/main.js?ver=<?php echo VERSION ?>"></script>
+<script src="assets/js/main.js?ver=<?php echo VERSION ?>-<?php echo filemtime(ROOT.'assets/js/main.js') ?>"></script>
 <?php if($conf['classblock']==1 || $conf['classblock']==2 && checkmobile()==false)include TEMPLATE_ROOT.'default/classblock.inc.php'; ?>
 </body>
 </html>

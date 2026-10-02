@@ -97,11 +97,12 @@ while($row = $rs->fetch()){
 <?php }?>
 	</div>
 	<div id="goodTypeContent" <?php if(!isset($_GET['cid'])){?>style="display: none"<?php }?>>
-		<div style="text-align: center;">
-			<h3><span id="className"></span></h3>
-			<img src="" id="classImg" width="50%" >
+		<div id="productImagePanel" style="text-align:center;margin-bottom:18px;">
+			<h3 style="margin:0 0 6px"><span id="className"></span></h3>
+			<p id="productNameTip" class="text-muted" style="margin:0 0 12px;font-size:13px;">请选择商品查看图片</p>
+			<img src="assets/img/Product/noimg.png" id="classImg" data-category-image="assets/img/Product/noimg.png" alt="商品图片" style="width:100%;max-width:360px;height:210px;object-fit:cover;border-radius:14px;border:1px solid #edf0f5;box-shadow:0 10px 28px rgba(31,45,61,.12);background:#f7f8fa;">
+			<div id="productThumbs" style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:14px;"></div>
 		</div>
-		<br>
 		<input type="hidden" name="cid" id="cid" value="0"/>
 		<div class="form-group">
 			<div class="input-group"><div class="input-group-addon">选择商品</div>
@@ -151,9 +152,14 @@ while($res = $rs->fetch()){
 	$select.='<option value="'.$res['cid'].'">'.$res['name'].'</option>';
 }
 if($select_count==0)$hideclass = true;
+else $hideclass = false;
 ?>
 		<div id="goodTypeContents">
 			<?php echo $conf['alert']?>
+			<div id="productImagePanel" style="text-align:center;margin-bottom:14px;">
+				<img src="assets/img/Product/noimg.png" id="classImg" data-category-image="assets/img/Product/noimg.png" alt="商品图片" style="width:100%;max-width:320px;height:180px;object-fit:cover;border-radius:12px;border:1px solid #edf0f5;background:#f7f8fa;">
+				<div id="productThumbs" style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:10px;"></div>
+			</div>
 			<?php if($conf['search_open']==1){?>
 			<div class="form-group" id="display_searchBar">
 				<div class="input-group"><div class="input-group-addon">搜索商品</div>

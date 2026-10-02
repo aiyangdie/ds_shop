@@ -128,7 +128,8 @@ class third_daishua{
 
 	public function class_list(){
 		$url = '/api.php?act=classlist';
-		$ret = $this->get_curl($url);
+		$post = 'user='.urlencode($this->config['username']).'&pass='.urlencode($this->config['password']);
+		$ret = $this->get_curl($url, $post);
 		if (!$ret = json_decode($ret, true)) {
 			return '打开对接网站失败';
 		}  elseif ($ret['code'] == -5) {

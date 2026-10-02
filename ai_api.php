@@ -55,7 +55,7 @@ if (!is_array($input)) $input = $_POST;
 $act = isset($_GET['act']) ? $_GET['act'] : (isset($input['act']) ? $input['act'] : 'chat');
 
 if ($act === 'tools') {
-    $tools = new \lib\Ai\Tools($DB, $conf, $CACHE);
+    $tools = new \lib\Ai\Tools($DB, $conf, $CACHE, array('scope' => 'admin'));
     $defs = $tools->definitions();
     $names = array();
     foreach ($defs as $d) {
@@ -71,7 +71,7 @@ if ($act === 'tool') {
     $name = isset($input['name']) ? $input['name'] : '';
     $args = isset($input['arguments']) && is_array($input['arguments']) ? $input['arguments'] : array();
     if ($name === '') exit(json_encode(array('code' => -1, 'msg' => 'name 必填')));
-    $tools = new \lib\Ai\Tools($DB, $conf, $CACHE);
+    $tools = new \lib\Ai\Tools($DB, $conf, $CACHE, array('scope' => 'admin'));
     $result = $tools->execute($name, $args);
     exit(json_encode(array('code' => 0, 'result' => $result), JSON_UNESCAPED_UNICODE));
 }
@@ -96,19 +96,32 @@ try {
         $conf['ai_api_key'],
         180
     );
-    $tools = new \lib\Ai\Tools($DB, $conf, $CACHE);
+    $tools = new \lib\Ai\Tools($DB, $conf, $CACHE, array('scope' => 'admin'));
     $agent = new \lib\Ai\Agent($client, $tools, array(
         'model' => isset($conf['ai_model']) ? $conf['ai_model'] : 'deepseek-chat',
         'temperature' => isset($conf['ai_temperature']) ? floatval($conf['ai_temperature']) : 0.2,
         'max_tokens' => isset($conf['ai_max_tokens']) ? intval($conf['ai_max_tokens']) : 4096,
         'system_prompt' => isset($conf['ai_system_prompt']) ? $conf['ai_system_prompt'] : '',
+        'role' => 'admin',
+        'site' => array(
+            'sitename' => isset($conf['sitename']) && $conf['sitename'] !== '' ? $conf['sitename'] : '本站',
+            'assistant_name' => !empty($conf['ai_assistant_name']) ? $conf['ai_assistant_name'] : '助手',
+        ),
     ));
     $result = $agent->run($messages);
+    if ($CACHE) {
+        $CACHE->clear();
+        $conf = $CACHE->pre_fetch();
+    }
     exit(json_encode(array(
         'code' => 0,
         'reply' => $result['reply'],
         'tool_trace' => $result['tool_trace'],
         'usage' => $result['usage'],
+        'site' => array(
+            'sitename' => isset($conf['sitename']) && $conf['sitename'] !== '' ? $conf['sitename'] : '本站',
+            'assistant_name' => !empty($conf['ai_assistant_name']) ? $conf['ai_assistant_name'] : '助手',
+        ),
     ), JSON_UNESCAPED_UNICODE));
 } catch (Exception $e) {
     exit(json_encode(array('code' => -1, 'msg' => $e->getMessage())));

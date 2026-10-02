@@ -25,6 +25,7 @@ if ($islogin == 1) {
                 <li><a href="#create" data-toggle="tab" aria-expanded="true">生成APP</a></li>
                 <li><a href="#query" data-toggle="tab" aria-expanded="true" onclick="querytask()">我的生成</a></li>
                 <li><a href="#other" data-toggle="tab" aria-expanded="true">其他</a></li>
+                <li><a href="./app_list.php"><i class="fa fa-list"></i> APP管理中心</a></li>
             </ul>
         </div>
         <div class="">
@@ -40,6 +41,42 @@ if ($islogin == 1) {
                                 <div class="well well-sm">
                                     使用前请先确保程序自带集成的方式与被对接的接口业务逻辑是否一致。
                                 </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">生成模式</label>
+                            <div class="col-sm-9">
+                                <select class="form-control" name="appcreate_mode"
+                                        default="<?php echo isset($conf['appcreate_mode'])?$conf['appcreate_mode']:'remote' ?>">
+                                    <option value="remote">第三方云打包 (remote)</option>
+                                    <option value="local">本地工厂自建壳 (local)</option>
+                                </select>
+                                <div class="help-block">local 模式不依赖第三方密钥，需在打包机定时运行 <code>php tools/appbuild/worker.php --once</code></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">本地包名前缀</label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" name="appcreate_package_prefix" value="<?php echo isset($conf['appcreate_package_prefix'])?htmlspecialchars($conf['appcreate_package_prefix']):'com.appshell.site' ?>" placeholder="com.yourbrand.app"/>
+                                <div class="help-block">最终包名形如 prefix.z{分站ID}{域名摘要}，保证分站 App 可同时安装</div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Android SDK 目录</label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" name="appcreate_sdk_dir" value="<?php echo isset($conf['appcreate_sdk_dir'])?htmlspecialchars($conf['appcreate_sdk_dir']):'' ?>" placeholder="可留空，默认读 ANDROID_HOME"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">APK 存储位置</label>
+                            <div class="col-sm-9">
+                                <select class="form-control" name="appcreate_storage"
+                                        default="<?php echo isset($conf['appcreate_storage'])?$conf['appcreate_storage']:'auto' ?>">
+                                    <option value="auto">跟随附件存储（AI模型配置里的 local/cos/oss/qiniu）</option>
+                                    <option value="local">强制本站 assets/uploads/apps</option>
+                                    <option value="cloud">强制云存储（使用附件驱动配置）</option>
+                                </select>
+                                <div class="help-block">生成好的 APK 只存文件 URL；大文件建议用 COS/OSS/七牛。未配云则自动落本地。</div>
                             </div>
                         </div>
                         <div class="form-group">
@@ -117,7 +154,13 @@ if ($islogin == 1) {
                         </div>
                         <div class="panel-footer"><span
                                     class="glyphicon glyphicon-info-sign"></span>APP自动化打包平台：<a
-                                    href="https://app.tt906.com/" target="_blank" rel="noreferrer">点此进入</a></div>
+                                    href="https://app.tt906.com/" target="_blank" rel="noreferrer">点此进入</a>
+                            ｜ 本地工厂说明见 <code>tools/appshell/README.md</code>
+                            ｜ <a href="./app_list.php">进入 APP 管理中心（上架/下架/删除）</a>
+                            ｜ <a href="javascript:;" onclick="loadLocalQueue()">查看本地队列</a>
+                            ｜ <a href="javascript:;" onclick="cleanupLocal()">清理过期任务</a>
+                        </div>
+                        <div id="localQueueBox" style="display:none;margin-top:12px"></div>
                     </form>
                 </div>
                 <div class="tab-pane fade in" id="create">
@@ -299,10 +342,17 @@ if ($islogin == 1) {
                 layer.close(ii);
                 if (data.code == 0) {
                     var item = '<table class="table table-hover" id="orderItem">';
-                    item += '<tr><td colspan="6" style="text-align:center" class="orderTitle"><b>APP生成任务结果<a href="javascript:querytask()" class="pull-right btn btn-xs btn-default"><i class="fa fa-refresh"></i>&nbsp;刷新</a></b></td></tr><tr><td class="info orderTitle">应用名称</td><td colspan="5" class="orderContent">' + data.data.name + '</td></tr><tr><td class="info orderTitle">应用网址</td><td colspan="5" class="orderContent">' + data.url + '</td></tr></tr><tr><td class="info orderTitle">创建时间</td><td colspan="5" class="orderContent">' + data.data.created_at + '</td></tr><tr><td class="info orderTitle">任务状态</td><td colspan="5" class="orderContent">' + (data.data.status == 1 ? '<span class="label label-success">成功</span>' : data.data.status == -1 ? '<span class="label label-danger">打包失败</span>' : '<span class="label label-warning">正在打包，请稍候点击刷新按钮查看</span>') + '</td></tr>';
+                    item += '<tr><td colspan="6" style="text-align:center" class="orderTitle"><b>APP生成任务结果<a href="javascript:querytask()" class="pull-right btn btn-xs btn-default"><i class="fa fa-refresh"></i>&nbsp;刷新</a></b></td></tr><tr><td class="info orderTitle">应用名称</td><td colspan="5" class="orderContent">' + data.data.name + '</td></tr><tr><td class="info orderTitle">应用网址</td><td colspan="5" class="orderContent">' + data.url + '</td></tr><tr><td class="info orderTitle">提交时间</td><td colspan="5" class="orderContent">' + (data.data.created_at || '') + '</td></tr>';
+                    if (data.data.updated_at) item += '<tr><td class="info orderTitle">更新时间</td><td colspan="5" class="orderContent">' + data.data.updated_at + '</td></tr>';
+                    if (data.data.finished_at) item += '<tr><td class="info orderTitle">完成时间</td><td colspan="5" class="orderContent">' + data.data.finished_at + '</td></tr>';
+                    if (data.data.duration_sec) item += '<tr><td class="info orderTitle">生成耗时</td><td colspan="5" class="orderContent">' + data.data.duration_sec + ' 秒</td></tr>';
+                    if (typeof data.data.progress !== 'undefined') item += '<tr><td class="info orderTitle">进度</td><td colspan="5" class="orderContent">' + data.data.progress + '%</td></tr>';
+                    item += '<tr><td class="info orderTitle">任务状态</td><td colspan="5" class="orderContent">' + (data.data.status == 1 ? '<span class="label label-success">成功</span>' : data.data.status == -1 ? '<span class="label label-danger">打包失败</span>' : '<span class="label label-warning">正在打包，请稍候点击刷新按钮查看</span>') + '</td></tr>';
+                    if (data.data.error) item += '<tr><td class="info orderTitle">失败原因</td><td colspan="5" class="orderContent text-danger">' + data.data.error + '</td></tr>';
                     if (data.data.status == 1) {
                         item += '<tr><td class="info orderTitle">双端下载页面</td><td colspan="5" class="orderContent"><a href="' + data.download_url + '" target="_blank" style="color:blue">' + data.download_url_show + '</a><br/></td></tr>';
                         item += '<tr><td class="info orderTitle">安卓APP下载</td><td colspan="5" class="orderContent"><a href="' + data.android_url + '" target="_blank" style="color:blue">' + data.android_url + '</a></tr>';
+                        if (data.data.storage) item += '<tr><td class="info orderTitle">存储</td><td colspan="5" class="orderContent">' + data.data.storage + (data.data.file_size ? (' / ' + (data.data.file_size/1048576).toFixed(2) + ' MB') : '') + '</td></tr>';
                         item += '<tr><td class="info orderTitle">iOS APP下载</td><td colspan="5" class="orderContent"><a href="' + data.download_url + '" target="_blank" style="color:blue">' + data.download_url_show + '</a>（必须Safari访问）</tr>';
                         if (navigator.userAgent.indexOf('Windows') > -1) {
                             item += '<tr><td class="info orderTitle">扫码下载</td><td colspan="5" class="orderContent"><img style="box-shadow: 3px 3px 16px #eee" src="//api.qrserver.com/v1/create-qr-code/?size=150x150&margin=10&data=' + encodeURIComponent(data.download_url_show) + '"></td></tr>';
@@ -343,7 +393,7 @@ if ($islogin == 1) {
                     success: function (data) {
                         layer.close(ii);
                         if (data.code == 0) {
-                            layer.alert(data.msg, {icon: 1});
+                            layer.alert(data.msg + '<br><br><a href="./app_list.php">打开 APP 管理中心</a>', {icon: 1});
                         } else {
                             layer.alert(data.msg, {icon: 2});
                         }
@@ -380,6 +430,72 @@ if ($islogin == 1) {
             });
         });
     })
+
+    function loadLocalQueue() {
+        var ii = layer.load(2);
+        $.getJSON('ajax_app.php?act=app_queue', function (res) {
+            layer.close(ii);
+            if (!res || res.code !== 0) return layer.msg((res && res.msg) || '失败');
+            function dur(sec) {
+                sec = parseInt(sec || 0, 10);
+                if (sec <= 0) return '-';
+                if (sec < 60) return sec + '秒';
+                return Math.floor(sec / 60) + '分' + (sec % 60) + '秒';
+            }
+            function sizeFmt(n) {
+                n = parseInt(n || 0, 10);
+                if (n <= 0) return '-';
+                if (n < 1048576) return (n / 1024).toFixed(1) + 'KB';
+                return (n / 1048576).toFixed(2) + 'MB';
+            }
+            var html = '<div class="table-responsive"><p>模式：' + (res.mode || '') + '，排队/构建中：' + (res.queued || 0) +
+                '　APK存储：' + (res.storage_hint || 'auto') +
+                '</p><table class="table table-bordered table-condensed"><thead><tr><th>ID</th><th>名称/域名</th><th>提交/完成</th><th>耗时</th><th>进度</th><th>状态</th><th>大小/存储</th><th></th></tr></thead><tbody>';
+            var bsMap = {0: '排队', 1: '构建中', 2: '成功', 3: '失败'};
+            (res.data || []).forEach(function (r) {
+                var a = r.addtime || '';
+                var u = r.updatetime || '';
+                var dsec = 0;
+                if (a && u) {
+                    dsec = Math.max(0, Math.floor((Date.parse(u.replace(/-/g,'/')) - Date.parse(a.replace(/-/g,'/'))) / 1000));
+                }
+                html += '<tr><td>' + r.id + '</td><td><b>' + $('<div>').text(r.name || '').html() + '</b><br><small>' + $('<div>').text(r.domain || '').html() + '</small></td>'
+                    + '<td><small>提交 ' + $('<div>').text(a).html() + '<br>更新 ' + $('<div>').text(u).html() + '</small></td>'
+                    + '<td>' + dur(dsec) + '</td>'
+                    + '<td>' + (r.progress || 0) + '%</td>'
+                    + '<td>' + (bsMap[r.build_status] || r.build_status) + (r.error ? ('<br><small class="text-danger">' + $('<div>').text(r.error).html() + '</small>') : '') + '</td>'
+                    + '<td>' + sizeFmt(r.file_size) + '<br><small>' + $('<div>').text(r.storage_driver || '-').html() + '</small></td><td>';
+                if (Number(r.build_status) === 3) {
+                    html += '<a href="javascript:;" onclick="retryApp(' + r.id + ')">重试</a> ';
+                }
+                html += '<a href="/?mod=app&id=' + r.id + '" target="_blank">下载页</a>';
+                if (r.android_url) {
+                    html += ' <a href="' + r.android_url + '" target="_blank">APK</a>';
+                }
+                html += '</td></tr>';
+            });
+            html += '</tbody></table></div>';
+            $('#localQueueBox').html(html).show();
+        });
+    }
+
+    function retryApp(id) {
+        $.post('ajax_app.php?act=app_retry', {id: id}, function (res) {
+            if (typeof res === 'string') try { res = JSON.parse(res); } catch (e) { res = {}; }
+            layer.msg(res.msg || (res.code === 0 ? '已入队' : '失败'));
+            if (res.code === 0) loadLocalQueue();
+        });
+    }
+
+    function cleanupLocal() {
+        layer.confirm('清理 30 天前失败任务的工作目录？', function (idx) {
+            $.post('ajax_app.php?act=app_cleanup', {days: 30}, function (res) {
+                if (typeof res === 'string') try { res = JSON.parse(res); } catch (e) { res = {}; }
+                layer.close(idx);
+                layer.msg(res.msg || '完成');
+            });
+        });
+    }
 </script>
 </body>
 </html>
