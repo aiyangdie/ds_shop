@@ -1,29 +1,7 @@
-# AI 运营助手
+# AI运营助手
 
-用自然语言直接操作本站，无需点后台页面。
+- 对话：`admin/ai.php`
+- 日志：`admin/ai_log.php`
+- 配置：`admin/ai_set.php`
 
-## 入口
-
-- 对话：`admin/ai.php`（左侧历史对话，中间聊天，右侧本轮操作日志）
-- 全部日志：`admin/ai_log.php`（参数/结果/耗时/IP/请求号，对话删除后日志仍保留）
-- 模型配置：`admin/ai_set.php`
-
-## 历史与限额
-
-- 对话数量默认最多约 40 条（可配 `ai_session_limit`）
-- 单对话消息默认最多约 80 条（可配 `ai_message_limit`）
-- 超出自动清理最旧对话/消息；**操作日志不随对话删除**
-
-## 数据表
-
-首次访问会自动建表，也可执行 `install/ai_tables.sql`：
-
-- `pre_ai_session` 对话
-- `pre_ai_message` 消息
-- `pre_ai_log` 详细操作审计
-
-## 能力概览
-
-经营概况、订单（查/改/批量/退款/重对接）、商品分类、分站余额、站点配置、对接货源、支付订单、工单、发卡、卡密、文章、提现、站内通知、加价模板；可用 `capability_catalog` 拉取完整清单。
-
-写操作（退款、充值、批量、删除、提现等）需用户明确确认，`confirm=true`。
+会话/消息有数量上限；工具调用写入 `pre_ai_log`，删对话不删日志。首次访问自动建表，或执行 `install/ai_tables.sql`。
