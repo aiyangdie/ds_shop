@@ -11,3 +11,8 @@ php_local_error.log
 _dbg.txt
 .playwright-mcp/
 supplier/data/*.log
+
+# local unrelated
+_gh_profile/
+ziwei-chat/
+tencent-channel-login-qrcode.png

@@ -376,6 +376,24 @@ if($admin_cdnpublic==1){
                             </a>
                         </li>
 
+                        <li class="<?php echo checkIfActive('ai,ai_set') ?>">
+                            <a href="javascript:void(0)" class="sidebar-nav-menu"><i
+                                        class="fa fa-chevron-left sidebar-nav-indicator sidebar-nav-mini-hide"></i><i
+                                        class="fa fa-magic sidebar-nav-icon"></i><span class="sidebar-nav-mini-hide">AI助手</span></a>
+                            <ul>
+                                <li>
+                                    <a class="<?php echo checkIfActive('ai,') ?>" href="./ai.php">
+                                        对话操作
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="<?php echo checkIfActive('ai_set') ?>" href="./ai_set.php">
+                                        模型配置
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
                         <li class="<?php echo checkIfActive('shequlist,pricejk,log,clone,cloneset,shequ,orderjk,batchgoods,api_dock') ?>">
                             <a href="javascript:void(0)" class="sidebar-nav-menu"><i
                                         class="fa fa-chevron-left sidebar-nav-indicator sidebar-nav-mini-hide"></i><i
