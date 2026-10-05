@@ -9,6 +9,7 @@ Each function must satisfy two checks before replacing the protected core:
 2. Behavioral parity against the original function with recording database,
    cache, filesystem, and network doubles.
 
-`core-simple.php` is the first verified batch. It contains the small modes 5,
-6, and 20 (`getSetting`, `saveSetting`, and `epay_check`).
+`core-simple.php` is the first verified batch. It contains modes 5, 6, 13, 15,
+17, 18, and 20: configuration access, point/log recording, SQL batches,
+recursive directory removal, and the payment availability check.
 

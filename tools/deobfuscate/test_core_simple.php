@@ -59,5 +59,31 @@ assertSameValue([
 
 assertSameValue(true, epay_check('anything'), 'epay_check result');
 
+$DB->calls = [];
+assertSameValue(null, addPointRecord(12, -3.5, '测试备注', 99), 'addPointRecord result');
+assertSameValue([[
+    'exec',
+    [
+        'INSERT INTO `pre_points` (`zid`, `action`, `point`, `bz`, `addtime`) VALUES (:zid, :action, :point, :bz, NOW())',
+        [':zid' => 12, ':action' => '测试备注', ':point' => -3.5, ':bz' => 99],
+    ],
+]], $DB->calls, 'addPointRecord calls');
+
+$DB->calls = [];
+assertSameValue(null, log_result('create', ['a' => 1], ['code' => 0, 'id' => 88], 1), 'log_result result');
+assertSameValue('下单成功!订单号:88', $DB->calls[0][1][1][':res'], 'log_result success text');
+
+$DB->calls = [];
+assertSameValue(2, batchSql(" INSERT INTO a VALUES (1); UPDATE a SET x=2; "), 'batchSql result');
+assertSameValue('INSERT INTO a VALUES (1)', $DB->calls[0][1][0], 'batchSql first statement');
+assertSameValue('UPDATE a SET x=2', $DB->calls[1][1][0], 'batchSql second statement');
+
+$fixture = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'recovered-core-' . bin2hex(random_bytes(6));
+mkdir($fixture . DIRECTORY_SEPARATOR . 'nested', 0777, true);
+file_put_contents($fixture . DIRECTORY_SEPARATOR . 'nested' . DIRECTORY_SEPARATOR . 'file.txt', 'test');
+assertSameValue(true, rm_dir($fixture), 'rm_dir result');
+assertSameValue(false, file_exists($fixture), 'rm_dir removed fixture');
+assertSameValue(false, rm_dir($fixture), 'rm_dir missing result');
+
 echo "core-simple parity checks passed\n";
 
