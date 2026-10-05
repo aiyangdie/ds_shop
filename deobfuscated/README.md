@@ -8,6 +8,13 @@ the scripts and manifests are the reviewable source of truth.
 
 - `includes/core.func.php` contains literal Base64 loaders, an XOR decoder,
   runtime `eval`, and anti-analysis checks.
+- Runtime inspection in an isolated PHP server confirmed three nested eval
+  layers. The innermost layer registers 24 business functions, including
+  `processorder`, `changeusermoney`, `pay_api`, `third_call`, and
+  `shequ_get_curl`.
+- The protector derives part of its decoder state from the original execution
+  context. Moving an eval into a helper changes that scope, so payload capture
+  must preserve both byte offsets and eval scope.
 - Fifteen files use heavy control-flow flattening with generated `goto` labels,
   global string tables, indirect calls, and opaque arithmetic.
 - The original Git history and sampled public forks already contain the same
@@ -21,6 +28,7 @@ Run with PHP 7.4 from the repository root:
 php tools/deobfuscate/extract_literal_payloads.php includes/core.func.php deobfuscated/stages/core-literals
 php tools/deobfuscate/expand_literal_layers.php includes/core.func.php deobfuscated/stages/core-stage1.php
 php tools/deobfuscate/decode_static_pack_tables.php includes/common.php deobfuscated/stages/common-stage1.php
+php tools/deobfuscate/intercept_decoder_eval.php includes/core.func.php deobfuscated/stages/core-intercept.php
 ```
 
 These tools decode literals only. They do not evaluate or include protected
