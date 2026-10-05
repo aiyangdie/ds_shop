@@ -17,7 +17,8 @@ template expansion, and configured payment API selection.
 
 `core-network.php` contains the recovered generic GET and supplier HTTP clients
 (modes 1 and 2), including their original request headers and proxy support,
-plus the Wxpusher/ServerChan notification dispatcher (mode 4).
+plus the Wxpusher/ServerChan notification dispatcher (mode 4), and the
+placeholder URL builder `do_curl` (mode 9) used by order docking callbacks.
 
 `core-notify.php` contains mail sending (mode 3: Sendcloud / Aliyun / PHPMailer),
 the HTML `sysmsg` page renderer (mode 16), and the admin security checklist

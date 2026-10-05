@@ -40,4 +40,38 @@ if ($recordedGetCurlCalls[0][0] !== 'https://sc.ftqq.com/KEY.send') {
     throw new RuntimeException('send_wechat ServerChan parity failure');
 }
 
+$recordedGetCurlCalls = [];
+$before = time();
+do_curl(
+    'https://api.test/?u=[input]&u2=[input2]&u3=[input3]&u4=[input4]&u5=[input5]&n=[num]&name=[name]&m=[money]&id=[id]&p=[price]&t=[time]',
+    ['A', 'B', 'C', 'D', 'E'],
+    'NUM',
+    'NAME字',
+    '1.5',
+    'PRICE',
+    'ID99'
+);
+$after = time();
+$got = $recordedGetCurlCalls[0][0];
+$matched = false;
+for ($timestamp = $before; $timestamp <= $after; $timestamp++) {
+    $expected = 'https://api.test/?u=A&u2=B&u3=C&u4=D&u5=E&n=NUM&name=' . rawurlencode('NAME字') . '&m=1.5&id=ID99&p=PRICE&t=' . $timestamp;
+    // urlencode uses + for spaces; rawurlencode uses %20. NAME字 has no space.
+    $expected = 'https://api.test/?u=A&u2=B&u3=C&u4=D&u5=E&n=NUM&name=' . urlencode('NAME字') . '&m=1.5&id=ID99&p=PRICE&t=' . $timestamp;
+    if ($got === $expected) {
+        $matched = true;
+        break;
+    }
+}
+if (!$matched || count($recordedGetCurlCalls[0]) !== 1) {
+    throw new RuntimeException('do_curl parity failure: ' . $got);
+}
+
+$recordedGetCurlCalls = [];
+do_curl('https://x/?q=[name]&t=[time]', 'ABCDE', 0, 'a b&c', 0, 0, 0);
+$got = $recordedGetCurlCalls[0][0];
+if (strpos($got, 'q=' . urlencode('a b&c')) === false) {
+    throw new RuntimeException('do_curl urlencode parity failure: ' . $got);
+}
+
 echo "core-network parity checks passed\n";

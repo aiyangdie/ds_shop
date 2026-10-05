@@ -121,3 +121,44 @@ function send_wechat($title, $content)
 
     return null;
 }
+
+/**
+ * Build a supplier callback URL from placeholders, then GET it.
+ *
+ * Argument slots after $url map to placeholders (not standard curl options):
+ * - $inputs: array/string providing [input]..[input5]
+ * - $num/$name/$money/$price/$id: [num]/[name]/[money]/[price]/[id]
+ * - [time] is always urlencode(time())
+ */
+function do_curl($url, $inputs, $num, $name, $money, $price, $id, $unused = null)
+{
+    $inputValues = [];
+    for ($index = 0; $index < 5; $index++) {
+        if (is_array($inputs)) {
+            $inputValues[$index] = array_key_exists($index, $inputs) ? $inputs[$index] : '';
+        } else {
+            $asString = (string) $inputs;
+            $inputValues[$index] = isset($asString[$index]) ? $asString[$index] : '';
+        }
+    }
+
+    $search = [
+        '[input]', '[input2]', '[input3]', '[input4]', '[input5]',
+        '[num]', '[name]', '[money]', '[time]', '[id]', '[price]',
+    ];
+    $replace = [
+        urlencode($inputValues[0]),
+        urlencode($inputValues[1]),
+        urlencode($inputValues[2]),
+        urlencode($inputValues[3]),
+        urlencode($inputValues[4]),
+        urlencode($num),
+        urlencode($name),
+        urlencode($money),
+        urlencode(time()),
+        urlencode($id),
+        urlencode($price),
+    ];
+
+    return get_curl(str_replace($search, $replace, $url));
+}
