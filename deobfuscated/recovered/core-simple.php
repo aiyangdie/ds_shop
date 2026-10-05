@@ -200,3 +200,44 @@ function ordername_replace($template, $productName, $tradeNumber)
     );
 }
 
+function merge_site_conf($configuration, $site)
+{
+    $always = [
+        'zid', 'sitename', 'title', 'keywords', 'description',
+        'ktfz_price', 'ktfz_price2', 'ktfz_domain', 'appurl',
+    ];
+    foreach ($always as $key) {
+        if (array_key_exists($key, $site)) {
+            $configuration[$key] = $site[$key];
+        }
+    }
+
+    if (!empty($configuration['fenzhan_template']) || empty($configuration['template'])) {
+        $configuration['template'] = array_key_exists('template', $site) ? $site['template'] : null;
+    }
+    if (!empty($configuration['fenzhan_edithtml'])) {
+        foreach (['anounce', 'bottom', 'modal', 'alert'] as $key) {
+            if (array_key_exists($key, $site)) {
+                $configuration[$key] = $site[$key];
+            }
+        }
+    }
+    if (!empty($configuration['fenzhan_kfqq'])) {
+        foreach (['kfqq', 'kfwx'] as $key) {
+            if (array_key_exists($key, $site)) {
+                $configuration[$key] = $site[$key];
+            }
+        }
+    }
+
+    return $configuration;
+}
+
+function pay_api($unused = true, $index = 1)
+{
+    global $conf;
+
+    $key = $index == 1 ? 'epay_url' : 'epay_url' . $index;
+    return array_key_exists($key, $conf) ? $conf[$key] : null;
+}
+

@@ -140,5 +140,19 @@ assertSameValue(true, strpos($orderName, '购买测试商品-T2026-') === 0, 'or
 $orderTime = (int) substr($orderName, strrpos($orderName, '-') + 1);
 assertSameValue(true, $orderTime >= $before && $orderTime <= $after, 'ordername_replace time');
 
+$merged = merge_site_conf(
+    ['template' => 'main', 'kfqq' => 'main', 'fenzhan_template' => 1, 'fenzhan_kfqq' => 1, 'fenzhan_edithtml' => 0],
+    ['sitename' => '分站', 'template' => 'sub', 'kfqq' => 'subqq', 'anounce' => 'blocked']
+);
+assertSameValue('分站', $merged['sitename'], 'merge_site_conf site name');
+assertSameValue('sub', $merged['template'], 'merge_site_conf template');
+assertSameValue('subqq', $merged['kfqq'], 'merge_site_conf contact');
+assertSameValue(false, array_key_exists('anounce', $merged), 'merge_site_conf blocked html');
+
+$conf = ['epay_url' => 'one', 'epay_url2' => 'two', 'epay_url3' => 'three'];
+assertSameValue('one', pay_api(false), 'pay_api primary');
+assertSameValue('two', pay_api(true, 2), 'pay_api secondary');
+assertSameValue(null, pay_api(true, 9), 'pay_api missing');
+
 echo "core-simple parity checks passed\n";
 
