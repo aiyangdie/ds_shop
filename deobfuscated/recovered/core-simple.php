@@ -39,6 +39,17 @@ function epay_check($unused)
     return true;
 }
 
+function third_call($type, $config, $method, $arguments = [])
+{
+    $class = '\\plugins\\third_' . $type;
+    if (!class_exists($class) || !method_exists($class, $method)) {
+        return false;
+    }
+
+    $plugin = new $class($config);
+    return call_user_func_array([$plugin, $method], $arguments);
+}
+
 function addPointRecord($siteId, $point = 0, $action = '提成', $remark = null)
 {
     global $DB;

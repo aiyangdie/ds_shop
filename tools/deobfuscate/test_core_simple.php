@@ -30,6 +30,17 @@ final class RecordingDatabase
     }
 }
 
+eval(<<<'PHP'
+namespace plugins;
+class third_test
+{
+    private $config;
+    public function __construct($config) { $this->config = $config; }
+    public function ping($value) { return [$this->config, $value]; }
+}
+PHP
+);
+
 function assertSameValue($expected, $actual, string $label): void
 {
     if ($expected !== $actual) {
@@ -58,6 +69,9 @@ assertSameValue([
 ], $DB->calls, 'saveSetting calls');
 
 assertSameValue(true, epay_check('anything'), 'epay_check result');
+assertSameValue([['token' => 7], 'hello'], third_call('test', ['token' => 7], 'ping', ['hello']), 'third_call result');
+assertSameValue(false, third_call('missing', [], 'ping'), 'third_call missing class');
+assertSameValue(false, third_call('test', [], 'missing'), 'third_call missing method');
 
 $DB->calls = [];
 assertSameValue(null, addPointRecord(12, -3.5, '测试备注', 99), 'addPointRecord result');
