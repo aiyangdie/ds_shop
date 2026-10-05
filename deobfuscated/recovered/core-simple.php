@@ -241,3 +241,31 @@ function pay_api($unused = true, $index = 1)
     return array_key_exists($key, $conf) ? $conf[$key] : null;
 }
 
+function get_pay_api($paymentType)
+{
+    global $conf;
+
+    if (!in_array($paymentType, ['alipay', 'qqpay', 'wxpay'], true)) {
+        exit('ERROR');
+    }
+
+    $api = isset($conf[$paymentType . '_api']) ? (int) $conf[$paymentType . '_api'] : 0;
+    if ($api === 2) {
+        $index = 1;
+    } elseif ($api === 8) {
+        $index = 2;
+    } elseif ($api === 9) {
+        $index = 3;
+    } else {
+        exit('ERROR');
+    }
+
+    $suffix = $index === 1 ? '' : (string) $index;
+    return [
+        'url' => pay_api(true, $index),
+        'pid' => isset($conf['epay_pid' . $suffix]) ? $conf['epay_pid' . $suffix] : null,
+        'key' => isset($conf['epay_key' . $suffix]) ? $conf['epay_key' . $suffix] : null,
+        'channel' => 'epay' . $index,
+    ];
+}
+

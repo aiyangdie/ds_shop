@@ -154,5 +154,22 @@ assertSameValue('one', pay_api(false), 'pay_api primary');
 assertSameValue('two', pay_api(true, 2), 'pay_api secondary');
 assertSameValue(null, pay_api(true, 9), 'pay_api missing');
 
+$conf += [
+    'alipay_api' => 2,
+    'wxpay_api' => 9,
+    'epay_pid' => 'pid1', 'epay_key' => 'key1',
+    'epay_pid3' => 'pid3', 'epay_key3' => 'key3',
+];
+assertSameValue(
+    ['url' => 'one', 'pid' => 'pid1', 'key' => 'key1', 'channel' => 'epay1'],
+    get_pay_api('alipay'),
+    'get_pay_api primary'
+);
+assertSameValue(
+    ['url' => 'three', 'pid' => 'pid3', 'key' => 'key3', 'channel' => 'epay3'],
+    get_pay_api('wxpay'),
+    'get_pay_api third'
+);
+
 echo "core-simple parity checks passed\n";
 

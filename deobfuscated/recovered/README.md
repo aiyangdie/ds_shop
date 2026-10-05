@@ -10,7 +10,7 @@ Each function must satisfy two checks before replacing the protected core:
    cache, filesystem, and network doubles.
 
 `core-simple.php` is the first verified batch. It contains modes 5, 6, 10, 12-15,
-17, 18, 20, 21, 23, and 24: configuration access and permission-aware site merging,
+17, 18, and 20-24: configuration access and permission-aware site merging,
 balance/point/log recording, SQL batches,
 plugin dispatch, recursive directory removal, payment availability, and order-name
 template expansion, and configured payment API selection.
