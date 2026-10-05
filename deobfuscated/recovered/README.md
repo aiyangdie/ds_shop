@@ -19,3 +19,7 @@ template expansion, and configured payment API selection.
 (modes 1 and 2), including their original request headers and proxy support,
 plus the Wxpusher/ServerChan notification dispatcher (mode 4).
 
+`core-notify.php` contains mail sending (mode 3: Sendcloud / Aliyun / PHPMailer),
+the HTML `sysmsg` page renderer (mode 16), and the admin security checklist
+`sec_check` (mode 19), including weak-password, archive, and PHP version checks.
+
