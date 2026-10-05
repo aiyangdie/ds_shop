@@ -24,3 +24,6 @@ placeholder URL builder `do_curl` (mode 9) used by order docking callbacks.
 the HTML `sysmsg` page renderer (mode 16), and the admin security checklist
 `sec_check` (mode 19), including weak-password, archive, and PHP version checks.
 
+`core-order.php` contains `do_goods` (mode 11): automatic card delivery, community
+plugin docking via `third_call`, and the is_curl=1 URL visitor path.
+
