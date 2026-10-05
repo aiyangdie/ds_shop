@@ -15,3 +15,6 @@ balance/point/log recording, SQL batches,
 plugin dispatch, recursive directory removal, payment availability, and order-name
 template expansion, and configured payment API selection.
 
+`core-network.php` contains the recovered generic GET and supplier HTTP clients
+(modes 1 and 2), including their original request headers and proxy support.
+
