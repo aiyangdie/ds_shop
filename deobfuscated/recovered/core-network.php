@@ -82,3 +82,42 @@ function shequ_get_curl($url, $post = 0, $referer = 0, $cookie = 0, $includeHead
 
     return $result;
 }
+
+function send_wechat($title, $content)
+{
+    global $conf;
+
+    if (empty($conf['wechat_api'])) {
+        return null;
+    }
+
+    if ((int) $conf['wechat_api'] === 1) {
+        $payload = json_encode([
+            'appToken' => $conf['wechat_apptoken'],
+            'content' => $content,
+            'summary' => $title,
+            'contentType' => 3,
+            'uids' => [$conf['wechat_appuid']],
+        ]);
+        get_curl(
+            'https://wxpusher.zjiecode.com/api/send/message',
+            $payload,
+            0,
+            0,
+            0,
+            0,
+            0,
+            ['Content-Type: application/json; charset=UTF-8']
+        );
+        return null;
+    }
+
+    if (!empty($conf['wechat_sckey'])) {
+        get_curl(
+            'https://sc.ftqq.com/' . $conf['wechat_sckey'] . '.send',
+            http_build_query(['text' => $title, 'desp' => $content])
+        );
+    }
+
+    return null;
+}

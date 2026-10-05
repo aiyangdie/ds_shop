@@ -16,5 +16,6 @@ plugin dispatch, recursive directory removal, payment availability, and order-na
 template expansion, and configured payment API selection.
 
 `core-network.php` contains the recovered generic GET and supplier HTTP clients
-(modes 1 and 2), including their original request headers and proxy support.
+(modes 1 and 2), including their original request headers and proxy support,
+plus the Wxpusher/ServerChan notification dispatcher (mode 4).
 
