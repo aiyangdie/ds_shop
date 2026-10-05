@@ -1,0 +1,28 @@
+# Deobfuscation workspace
+
+This directory contains reproducible outputs from the source-cleaning tools in
+`tools/deobfuscate/`. Generated stage files are intentionally ignored by Git;
+the scripts and manifests are the reviewable source of truth.
+
+## Current findings
+
+- `includes/core.func.php` contains literal Base64 loaders, an XOR decoder,
+  runtime `eval`, and anti-analysis checks.
+- Fifteen files use heavy control-flow flattening with generated `goto` labels,
+  global string tables, indirect calls, and opaque arithmetic.
+- The original Git history and sampled public forks already contain the same
+  protection; a clean historical copy has not been found.
+
+## Safe first-stage extraction
+
+Run with PHP 7.4 from the repository root:
+
+```text
+php tools/deobfuscate/extract_literal_payloads.php includes/core.func.php deobfuscated/stages/core-literals
+php tools/deobfuscate/expand_literal_layers.php includes/core.func.php deobfuscated/stages/core-stage1.php
+php tools/deobfuscate/decode_static_pack_tables.php includes/common.php deobfuscated/stages/common-stage1.php
+```
+
+These tools decode literals only. They do not evaluate or include protected
+code and therefore do not trigger its network, database, or anti-debug paths.
+
