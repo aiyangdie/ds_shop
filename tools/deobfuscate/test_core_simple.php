@@ -16,6 +16,8 @@ final class RecordingCache
 final class RecordingDatabase
 {
     public $calls = [];
+    public $row = null;
+    public $queryRows = [];
 
     public function getColumn($query, $parameters = [])
     {
@@ -28,6 +30,25 @@ final class RecordingDatabase
         $this->calls[] = ['exec', [$query, $parameters]];
         return 'db-hit';
     }
+
+    public function getRow($query)
+    {
+        $this->calls[] = ['getRow', [$query]];
+        return $this->row;
+    }
+
+    public function query($query)
+    {
+        $this->calls[] = ['query', [$query]];
+        return new RecordingResult($this->queryRows);
+    }
+}
+
+final class RecordingResult
+{
+    private $rows;
+    public function __construct(array $rows) { $this->rows = $rows; }
+    public function fetch() { return array_shift($this->rows); }
 }
 
 eval(<<<'PHP'
@@ -50,6 +71,7 @@ function assertSameValue($expected, $actual, string $label): void
 
 $CACHE = new RecordingCache();
 $DB = new RecordingDatabase();
+$conf = ['tixian_limit' => 1, 'tixian_days' => 3];
 require dirname(__DIR__, 2) . '/deobfuscated/recovered/core-simple.php';
 
 assertSameValue(null, getSetting('alpha', false), 'getSetting cache result');
@@ -82,6 +104,18 @@ assertSameValue([[
         [':zid' => 12, ':action' => '测试备注', ':point' => -3.5, ':bz' => 99],
     ],
 ]], $DB->calls, 'addPointRecord calls');
+
+$DB->calls = [];
+$DB->row = ['zid' => 8, 'rmb' => 22, 'rmbtc' => 20];
+assertSameValue('db-hit', changeUserMoney(8, 5, false, '消费', '备注', 77), 'changeUserMoney result');
+assertSameValue("UPDATE `pre_site` SET `rmb`='17',`rmbtc`='17' WHERE `zid`='8'", $DB->calls[1][1][0], 'changeUserMoney update');
+assertSameValue(0, $DB->calls[2][1][1][':status'], 'changeUserMoney status');
+
+$DB->calls = [];
+$DB->queryRows = [['id' => 3, 'zid' => 8, 'point' => 5, 'status' => 1, 'rmb' => 100, 'rmbtc' => 20]];
+assertSameValue(true, rollbackPoint(66), 'rollbackPoint result');
+assertSameValue("UPDATE pre_site SET `rmb`=`rmb`-5,`rmbtc`=`rmbtc`-5 WHERE zid='8'", $DB->calls[1][1][0], 'rollbackPoint update');
+assertSameValue("DELETE FROM pre_points WHERE id='3'", $DB->calls[2][1][0], 'rollbackPoint delete');
 
 $DB->calls = [];
 assertSameValue(null, log_result('create', ['a' => 1], ['code' => 0, 'id' => 88], 1), 'log_result result');

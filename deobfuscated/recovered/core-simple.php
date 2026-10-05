@@ -60,6 +60,71 @@ function addPointRecord($siteId, $point = 0, $action = '提成', $remark = null)
     );
 }
 
+function changeUserMoney($siteId, $money, $increase = true, $action = null, $remark = null, $orderId = null)
+{
+    global $DB, $conf;
+
+    if ($money <= 0) {
+        return false;
+    }
+
+    $site = $DB->getRow("SELECT zid,rmb,rmbtc FROM pre_site WHERE zid='{$siteId}' LIMIT 1");
+    if (!$site) {
+        return false;
+    }
+
+    $newBalance = $increase ? $site['rmb'] + $money : $site['rmb'] - $money;
+    $newWithdrawable = $site['rmbtc'];
+    $status = 0;
+
+    if ($increase && ($action === '提成' || $action === '奖励')) {
+        if (!$conf['tixian_limit'] || ($conf['tixian_limit'] == 1 && !$conf['tixian_days'])) {
+            $newWithdrawable += $money;
+            $status = 1;
+        }
+    } elseif ($increase && $action === '退回') {
+        $newWithdrawable += $money;
+    } elseif (!$increase && $newWithdrawable > $newBalance) {
+        $newWithdrawable = $newBalance;
+    }
+
+    $result = $DB->exec(
+        "UPDATE `pre_site` SET `rmb`='{$newBalance}',`rmbtc`='{$newWithdrawable}' WHERE `zid`='{$siteId}'"
+    );
+    $DB->exec(
+        'INSERT INTO `pre_points` (`zid`, `action`, `point`, `bz`, `addtime`, `orderid`, `status`) VALUES (:zid, :action, :point, :bz, NOW(), :orderid, :status)',
+        [
+            ':zid' => $siteId,
+            ':action' => $action,
+            ':point' => $money,
+            ':bz' => $remark,
+            ':orderid' => $orderId,
+            ':status' => $status,
+        ]
+    );
+
+    return $result;
+}
+
+function rollbackPoint($orderId)
+{
+    global $DB;
+
+    $result = $DB->query(
+        "SELECT A.id,A.zid,A.point,A.status,B.rmb,B.rmbtc FROM pre_points A LEFT JOIN pre_site B ON A.zid=B.zid WHERE A.orderid='{$orderId}' AND A.action='提成' LIMIT 2"
+    );
+    while ($row = $result->fetch()) {
+        $set = '`rmb`=`rmb`-' . $row['point'];
+        if ($row['status']) {
+            $set .= ',`rmbtc`=`rmbtc`-' . $row['point'];
+        }
+        $DB->exec("UPDATE pre_site SET {$set} WHERE zid='{$row['zid']}'");
+        $DB->exec("DELETE FROM pre_points WHERE id='{$row['id']}'");
+    }
+
+    return true;
+}
+
 function log_result($action, $parameters, $result, $status = 0)
 {
     global $DB;
