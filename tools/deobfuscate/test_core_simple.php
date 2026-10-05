@@ -133,5 +133,12 @@ assertSameValue(true, rm_dir($fixture), 'rm_dir result');
 assertSameValue(false, file_exists($fixture), 'rm_dir removed fixture');
 assertSameValue(false, rm_dir($fixture), 'rm_dir missing result');
 
+$before = time();
+$orderName = ordername_replace('购买[name]-[order]-[time]', '测试商品', 'T2026');
+$after = time();
+assertSameValue(true, strpos($orderName, '购买测试商品-T2026-') === 0, 'ordername_replace prefix');
+$orderTime = (int) substr($orderName, strrpos($orderName, '-') + 1);
+assertSameValue(true, $orderTime >= $before && $orderTime <= $after, 'ordername_replace time');
+
 echo "core-simple parity checks passed\n";
 

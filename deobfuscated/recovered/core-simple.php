@@ -191,3 +191,12 @@ function rm_dir($directory)
     return rmdir($directory);
 }
 
+function ordername_replace($template, $productName, $tradeNumber)
+{
+    return str_replace(
+        ['[name]', '[order]', '[time]'],
+        [$productName, $tradeNumber, time()],
+        $template
+    );
+}
+
