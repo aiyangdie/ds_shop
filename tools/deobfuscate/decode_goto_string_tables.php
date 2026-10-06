@@ -59,6 +59,18 @@ if (preg_match_all(
     }
 }
 
+// common.php builds explode args as $arr[]=delim; $arr[]=payload; call_user_func_array("explode", $arr).
+if (preg_match_all(
+    '/\$([A-Za-z0-9_]+)\[\]\s*=\s*"([^"]+)";\s*\$\1\[\]\s*=\s*"((?:H\*|[^"]*))";\s*\$[A-Za-z0-9_]+\s*=\s*call_user_func_array\(\s*"explode"\s*,\s*\$\1\s*\)/',
+    $source,
+    $matches,
+    PREG_SET_ORDER
+)) {
+    foreach ($matches as $index => $match) {
+        $tables['explode_push_' . $index] = $decodeTable($match[2], $match[3]);
+    }
+}
+
 // Also resolve define("CCC...", "CCC...") aliases used as $GLOBALS keys.
 $aliases = [];
 if (preg_match_all(
