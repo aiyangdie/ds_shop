@@ -1,0 +1,116 @@
+<?php
+
+/**
+ * Decode hex string tables used by goto-flattened admin pages.
+ *
+ * Usage:
+ *   php tools/deobfuscate/decode_goto_string_tables.php admin/classlist.php deobfuscated/stages/goto/classlist-strings.json
+ */
+
+declare(strict_types=1);
+
+if ($argc < 3) {
+    fwrite(STDERR, "Usage: php decode_goto_string_tables.php <source.php> <output.json> [output.php]\n");
+    exit(2);
+}
+
+$source = file_get_contents($argv[1]);
+if ($source === false) {
+    fwrite(STDERR, "Unable to read {$argv[1]}\n");
+    exit(1);
+}
+
+$tables = [];
+if (preg_match_all(
+    '/\$GLOBALS\[([A-Za-z0-9_]+)\]\s*=\s*explode\(\s*"([^"]+)"\s*,\s*"([^"]*)"\s*\)\s*;/',
+    $source,
+    $matches,
+    PREG_SET_ORDER
+)) {
+    foreach ($matches as $match) {
+        $key = $match[1];
+        // Constant name may be used as key; keep both constant and literal forms.
+        $parts = explode($match[2], $match[3]);
+        $decoded = [];
+        foreach ($parts as $i => $part) {
+            if ($part === 'H*') {
+                $decoded[$i] = 'H*';
+                continue;
+            }
+            $bin = @pack('H*', $part);
+            $decoded[$i] = ($bin !== false && $bin !== '') ? $bin : $part;
+        }
+        $tables[$key] = $decoded;
+    }
+}
+
+// Also resolve define("CCC...", "CCC...") aliases used as $GLOBALS keys.
+$aliases = [];
+if (preg_match_all(
+    '/if\s*\(\s*!defined\(\s*"([^"]+)"\s*\)\s*\)\s*define\(\s*"\1"\s*,\s*"([^"]+)"\s*\)\s*;/',
+    $source,
+    $aliasMatches,
+    PREG_SET_ORDER
+)) {
+    foreach ($aliasMatches as $match) {
+        $aliases[$match[1]] = $match[2];
+    }
+}
+
+$report = [
+    'source' => $argv[1],
+    'aliases' => $aliases,
+    'tables' => $tables,
+];
+
+file_put_contents($argv[2], json_encode($report, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+echo 'Wrote ' . $argv[2] . ' with ' . count($tables) . " table(s)\n";
+
+if ($argc >= 4) {
+    $out = $source;
+    foreach ($tables as $tableName => $entries) {
+        // Prefer the largest non-H* table as the string table.
+        $isStringTable = false;
+        foreach ($entries as $entry) {
+            if ($entry !== 'H*' && strlen((string) $entry) > 2) {
+                $isStringTable = true;
+                break;
+            }
+        }
+        if (!$isStringTable) {
+            continue;
+        }
+
+        // Replace pack(H*, hexliteral) already handled elsewhere; here emit a readable map comment.
+        $comment = "\n/* decoded string table {$tableName}:\n";
+        foreach ($entries as $i => $value) {
+            if ($value === 'H*') {
+                continue;
+            }
+            $comment .= sprintf("  [%d] %s\n", $i, str_replace(["\r", "\n"], ['\\r', '\\n'], (string) $value));
+        }
+        $comment .= "*/\n";
+        $out = preg_replace('/^<\?php\s*/', "<?php\n" . $comment, $out, 1);
+        break;
+    }
+    file_put_contents($argv[3], $out);
+    echo 'Wrote annotated ' . $argv[3] . "\n";
+}
+
+// Print a compact readable dump for the main string table.
+foreach ($tables as $name => $entries) {
+    if (count($entries) < 5) {
+        continue;
+    }
+    echo "Table {$name} (" . count($entries) . " entries):\n";
+    foreach ($entries as $i => $value) {
+        if ($value === 'H*') {
+            continue;
+        }
+        $oneLine = str_replace(["\r", "\n"], ['\\r', '\\n'], (string) $value);
+        if (strlen($oneLine) > 120) {
+            $oneLine = substr($oneLine, 0, 117) . '...';
+        }
+        echo sprintf("  %3d  %s\n", $i, $oneLine);
+    }
+}

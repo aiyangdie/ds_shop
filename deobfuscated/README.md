@@ -38,7 +38,15 @@ php tools/deobfuscate/intercept_decoder_eval.php includes/core.func.php deobfusc
 php tools/deobfuscate/patch_cli_guard.php includes/core.func.php deobfuscated/stages/core-cli.php
 php tools/deobfuscate/inspect_serialized_static.php deobfuscated/stages/function-static.bin
 php tools/deobfuscate/extract_static_string.php deobfuscated/stages/function-static.bin deobfuscated/stages/core-dispatcher-payload.bin
+php tools/deobfuscate/assemble_core_func.php
+php tools/deobfuscate/smoke_recovered_core.php
+php tools/deobfuscate/decode_goto_string_tables.php admin/classlist.php deobfuscated/stages/goto/classlist-strings.json
+php tools/deobfuscate/switch_recovered_core.php status
 ```
+
+Goto-flattened pages store HTML/SQL in a hex `explode` table plus `pack(H*, …)`
+lookups. Decode the table first, then rewrite the page. The first recovered
+example is `deobfuscated/recovered/admin/classlist.php`.
 
 These tools decode literals only. They do not evaluate or include protected
 code and therefore do not trigger its network, database, or anti-debug paths.
