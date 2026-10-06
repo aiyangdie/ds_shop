@@ -13,10 +13,10 @@ if ($source === false) {
     exit(1);
 }
 
-// The decoder's key-13 branch evaluates its next decrypted layer. Replacing
+// The decoder's key branch evaluates its next decrypted layer. Replacing
 // only the four-byte language construct with a four-byte function name keeps
 // every subsequent byte at its original offset.
-$pattern = '/(==13\s*\))eval(?=\s*\()/';
+$pattern = '/(==(?:12|13)\s*\))eval(?=\s*\()/';
 $instrumented = preg_replace($pattern, '$1capt', $source, 1, $count);
 if ($count !== 1 || $instrumented === null) {
     fwrite(STDERR, "Expected exactly one decoder eval site; found {$count}\n");

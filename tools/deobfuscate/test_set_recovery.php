@@ -43,6 +43,14 @@ foreach ([
     'anounce',
     'set.php?mod=upwxqrcode',
     '找到BOM并已自动去除',
+    "\$mod === 'epay_settle'",
+    "\$mod === 'epay_order'",
+    "recovered_epay_query('query')",
+    "recovered_epay_query('settle'",
+    "recovered_epay_query('orders'",
+    'api.php?act=change&pid=',
+    'function checkepayurl(var1,var2)',
+    'micropay_n',
 ] as $needle) {
     if (strpos($src, $needle) === false) {
         throw new RuntimeException('missing fragment: ' . $needle);

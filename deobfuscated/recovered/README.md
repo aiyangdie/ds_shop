@@ -45,12 +45,12 @@ Goto-flattened admin pages rewritten from decoded hex string tables:
 
 `classlist.php`, `orderjk.php`, `shoplist.php`, `pricejk.php`, `fakalist.php`,
 `userlist.php`, `invite.php`, `article.php`, `account.php`, `shequlist.php`,
-`sitelist.php`, `clone.php`, `shopedit.php`. Recovered bootstrap:
+`sitelist.php`, `clone.php`, `shopedit.php`, `set.php`. Recovered bootstrap:
 `includes/common.php` (as `recovered/common.php`).
 
-Remaining goto pages:
-
-| File | goto count (approx.) |
-|---|---:|
-| `admin/set.php` | 18546 |
+Goto-flattened admin pages and `includes/common.php` now have recovered copies.
+The live files stay protected until an explicit switch. Remaining protected
+payload is `includes/core.func.php` and `includes/ajax.func.php` (nested-eval
+VMs; core drop-in already assembled here). Admin reconstructions are string-table forms plus fragment
+tests, not a runtime parity suite.
 

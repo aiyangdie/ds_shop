@@ -137,6 +137,22 @@ if ($mod === 'wxpay_n' && $_POST) {
     showmsg('修改成功！', 1);
 }
 if ($mod === 'epay_n' && $_POST) {
+    if (isset($_POST['account']) || isset($_POST['username'])) {
+        $account = isset($_POST['account']) ? trim((string) $_POST['account']) : '';
+        $username = isset($_POST['username']) ? trim((string) $_POST['username']) : '';
+        $type = isset($_POST['type']) ? trim((string) $_POST['type']) : '';
+        if ($account === '' || $username === '') {
+            showmsg('保存错误,请确保每项都不为空!', 3);
+        }
+        $base = recovered_epay_base();
+        $site = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '';
+        $url = $base . 'api.php?act=change&pid=' . urlencode((string) $conf['epay_pid']) . '&key=' . urlencode((string) $conf['epay_key']) . '&account=' . urlencode($account) . '&username=' . urlencode($username) . '&url=' . urlencode($site);
+        if ($type !== '') {
+            $url .= '&type=' . urlencode($type);
+        }
+        $arr = json_decode((string) get_curl($url), true);
+        showmsg((isset($arr['msg']) ? $arr['msg'] : '修改成功!'), (isset($arr['code']) && intval($arr['code']) === 1) ? 1 : 3);
+    }
     if (file_exists(ROOT . 'admin/pay.lock') && !isset($_GET['unlockpay'])) {
         recovered_save_keys(['epay_url', 'epay_url2', 'epay_url3']);
     } else {
@@ -149,6 +165,32 @@ if ($mod === 'codepay_n' && $_POST) {
     recovered_save_keys(['codepay_id', 'codepay_key']);
     $CACHE->clear();
     showmsg('修改成功！', 1);
+}
+if ($mod === 'micropay_n' && $_POST) {
+    recovered_save_keys(['micropay_pid', 'micropay_key', 'micropayapi', 'micropay_mchid']);
+    $CACHE->clear();
+    showmsg('修改成功！', 1);
+}
+
+function recovered_epay_base()
+{
+    global $conf;
+    $url = isset($conf['epay_url']) ? rtrim((string) $conf['epay_url'], '/') . '/' : '';
+    return $url;
+}
+
+function recovered_epay_query($act, $extra = '')
+{
+    global $conf;
+    $base = recovered_epay_base();
+    if ($base === '' || empty($conf['epay_pid']) || empty($conf['epay_key'])) {
+        return null;
+    }
+    $site = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '';
+    $url = $base . 'api.php?act=' . $act . '&pid=' . urlencode((string) $conf['epay_pid']) . '&key=' . urlencode((string) $conf['epay_key']) . '&url=' . urlencode($site) . $extra;
+    $raw = get_curl($url);
+    $arr = json_decode((string) $raw, true);
+    return is_array($arr) ? $arr : null;
 }
 
 if ($mod === 'mailcon_reset') {
@@ -493,7 +535,54 @@ if ($mod === 'account') {
     echo recovered_group('站点URL', '<input type="text" name="url" value="" class="form-control" placeholder="http://www.qq.com/" required/>');
     echo recovered_group('复制内容', '<label><input name="content[]" type="checkbox" value="anounce" checked/> 首页公告</label><br/><label><input name="content[]" type="checkbox" value="modal" checked/> 弹出公告</label><br/><label><input name="content[]" type="checkbox" value="bottom" checked/> 底部排版</label><br/><label><input name="content[]" type="checkbox" value="alert" checked/> 下单提示</label><br/><label><input name="content[]" type="checkbox" value="gg_search" checked/> 订单查询公告</label><br/><label><input name="content[]" type="checkbox" value="gg_panel" checked/> 分站后台公告</label>');
     echo '<div class="form-group"><div class="col-sm-offset-2 col-sm-10"><input type="submit" name="submit" value="修改" class="btn btn-primary btn-block"/></div></div></form>';
-} elseif ($mod === 'pay' || $mod === 'alipay' || $mod === 'alipay2' || $mod === 'qqpay' || $mod === 'wxpay' || $mod === 'epay' || $mod === 'codepay') {
+} elseif ($mod === 'epay') {
+    if (empty($conf['epay_pid']) || empty($conf['epay_key'])) {
+        showmsg('你还未填写彩虹易支付商户ID和密钥，请返回填写！', 3);
+    }
+    $arr = recovered_epay_query('query');
+    if (!$arr || (isset($arr['code']) && intval($arr['code']) !== 1 && intval($arr['code']) !== 0)) {
+        showmsg('易支付KEY校验失败！', 3);
+    }
+    if (isset($arr['active']) && intval($arr['active']) === 0) {
+        showmsg('该商户已被封禁', 3);
+    }
+    $money = isset($arr['money']) ? $arr['money'] : '';
+    $stype = isset($arr['type']) ? $arr['type'] : (isset($arr['stype']) ? $arr['stype'] : '');
+    $account = isset($arr['account']) ? $arr['account'] : '';
+    $username = isset($arr['username']) ? $arr['username'] : '';
+    echo '<div class="block-title"><h3 class="panel-title">彩虹易支付设置</h3></div>';
+    echo '<ul class="nav nav-tabs"><li class="active"><a href="#">彩虹易支付设置</a></li><li><a href="./set.php?mod=epay_order">订单记录</a></li><li><a href="./set.php?mod=epay_settle">结算记录</a></li></ul>';
+    echo '<form action="./set.php?mod=epay_n" method="post" class="form-horizontal" role="form">';
+    echo '<h4>商户信息查看：</h4>';
+    echo recovered_group('商户ID', '<input type="text" name="pid" value="' . htmlspecialchars((string) $conf['epay_pid']) . '" class="form-control" disabled/>');
+    echo recovered_group('商户KEY', '<input type="text" name="key" value="****************" class="form-control" disabled/>');
+    echo recovered_group('商户余额', '<input type="text" name="money" value="' . htmlspecialchars((string) $money) . '" class="form-control" disabled/>');
+    echo '<h4>收款账号设置：</h4>';
+    echo recovered_group('结算方式', '<input type="text" name="type" value="' . htmlspecialchars((string) $stype) . '" class="form-control"/>');
+    echo recovered_group('结算账号', '<input type="text" name="account" value="' . htmlspecialchars((string) $account) . '" class="form-control"/>');
+    echo recovered_group('真实姓名', '<input type="text" name="username" value="' . htmlspecialchars((string) $username) . '" class="form-control"/>');
+    echo '<div class="form-group"><div class="col-sm-offset-2 col-sm-10"><input type="submit" name="submit" value="确定修改" class="btn btn-primary btn-block"/></div></div>';
+    echo '<h4><span class="glyphicon glyphicon-info-sign"></span> 注意事项</h4><p>1.相关信息请到商户网站进行修改，此处信息仅供参考！</p></form>';
+} elseif ($mod === 'epay_settle') {
+    $arr = recovered_epay_query('settle', '&limit=20');
+    echo '<div class="block-title w h"><h3 class="panel-title">彩虹易支付结算记录</h3></div>';
+    echo '<div class="table-responsive"><table class="table table-striped"><thead><tr><th>ID</th><th>结算账号</th><th>结算金额</th><th>手续费</th><th>结算时间</th></tr></thead><tbody>';
+    $rows = isset($arr['data']) && is_array($arr['data']) ? $arr['data'] : [];
+    foreach ($rows as $row) {
+        echo '<tr><td><b>' . htmlspecialchars((string) $row['id']) . '</b></td><td>' . htmlspecialchars((string) $row['account']) . '</td><td><b>' . htmlspecialchars((string) $row['money']) . '</b></td><td><b>' . htmlspecialchars((string) $row['fee']) . '</b></td><td>' . htmlspecialchars((string) $row['time']) . '</td></tr>';
+    }
+    echo '</tbody></table></div>';
+} elseif ($mod === 'epay_order') {
+    $arr = recovered_epay_query('orders', '&limit=30');
+    echo '<div class="block-title"><h3 class="panel-title">彩虹易支付订单记录</h3></div>订单只展示前30条[<a href="set.php?mod=epay">返回</a>]';
+    echo '<div class="table-responsive"><table class="table table-striped"><thead><tr><th>交易号/商户订单号</th><th>付款方式</th><th>商品名称/金额</th><th>创建时间/完成时间</th><th>状态</th></tr></thead><tbody>';
+    $rows = isset($arr['data']) && is_array($arr['data']) ? $arr['data'] : [];
+    foreach ($rows as $row) {
+        $st = isset($row['status']) && intval($row['status']) === 1 ? '<font color=green>已完成</font>' : '<font color=red>未完成</font>';
+        echo '<tr><td>' . htmlspecialchars((string) $row['trade_no']) . '<br/>' . htmlspecialchars((string) $row['out_trade_no']) . '</td><td>' . htmlspecialchars((string) $row['type']) . '</td><td>' . htmlspecialchars((string) $row['name']) . '<br/>￥ <b>' . htmlspecialchars((string) $row['money']) . '</b></td><td>' . htmlspecialchars((string) $row['addtime']) . '<br/>' . htmlspecialchars((string) $row['endtime']) . '</td><td>' . $st . '</td></tr>';
+    }
+    echo '</tbody></table></div>';
+} elseif ($mod === 'pay' || $mod === 'alipay' || $mod === 'alipay2' || $mod === 'qqpay' || $mod === 'wxpay' || $mod === 'codepay') {
     echo '<div class="block-title"><h3 class="panel-title">支付接口配置</h3></div>';
     echo '<form onsubmit="return saveSetting(this)" method="post" class="form-horizontal" role="form">';
     echo recovered_group('支付宝接口', recovered_select('alipay_api', ['0' => '关闭', '1' => '支付宝电脑+手机网站支付', '3' => '支付宝当面付扫码支付', '2' => '彩虹易支付接口', '7' => '卡易信笔笔清支付宝接口']));
@@ -539,6 +628,7 @@ if ($mod === 'account') {
     echo recovered_group('接口地址', recovered_input('epay_url', '请填写接口网址'));
     echo recovered_group('商户ID', recovered_input('epay_pid'));
     echo recovered_group('商户密钥', recovered_input('epay_key'));
+    echo '<div class="form-group"><div class="col-sm-offset-2 col-sm-10"><a href="set.php?mod=epay">进入易支付结算设置及订单查询页面</a></div></div>';
     echo '<div class="block-title"><h3 class="panel-title">彩虹易支付（备用1）配置</h3></div>';
     echo recovered_group('接口地址', recovered_input('epay_url2'));
     echo recovered_group('商户ID', recovered_input('epay_pid2'));
@@ -647,6 +737,26 @@ function thirdloginunbind(type){
 }
 function Addstr(id, str) {
 	$("#"+id).val($("#"+id).val()+str);
+}
+function checkURL(obj)
+{
+	var url = $(obj).val();
+	if (url.indexOf(" ")>=0){
+		url = url.replace(/ /g,"");
+	}
+	if (url.toLowerCase().indexOf("http://")<0 && url.toLowerCase().indexOf("https://")<0){
+		url = "http://"+url;
+	}
+	if (url.slice(url.length-1)!="/"){
+		url = url+"/";
+	}
+	$(obj).val(url);
+}
+function checkepayurl(var1,var2){
+	if($("select[name=\'"+var1+"\']").val() == -1){
+		checkURL("input[name=\'"+var2+"\']");
+	}
+	return true;
 }
 </script>
 ';

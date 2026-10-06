@@ -6,8 +6,13 @@ the scripts and manifests are the reviewable source of truth.
 
 ## Current findings
 
-- `includes/core.func.php` contains literal Base64 loaders, an XOR decoder,
-  runtime `eval`, and anti-analysis checks.
+- `includes/core.func.php` and `includes/ajax.func.php` contain the same
+  nested-eval protector (24-mode VM vs a second dispatcher). Core is recovered
+  under `recovered/core.func.php`; ajax.func.php is the remaining nested-eval
+  file.
+- Fifteen files used heavy `goto` flattening. Recovered copies now exist for
+  all of them (`admin/*.php` listed in `recovered/README.md` plus
+  `recovered/common.php`). Live copies stay protected.
 - Runtime inspection in an isolated PHP server confirmed three nested eval
   layers. The innermost layer registers 24 business functions, including
   `processorder`, `changeusermoney`, `pay_api`, `third_call`, and
