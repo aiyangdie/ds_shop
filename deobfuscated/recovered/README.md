@@ -41,17 +41,15 @@ until you run the switch tool.
 
 ## Recovered admin pages
 
-`admin/classlist.php` and `admin/orderjk.php` are the first goto-flattened admin
-pages rewritten from their decoded hex string tables. Remaining goto pages:
+Goto-flattened admin pages rewritten from decoded hex string tables:
+
+`classlist.php`, `orderjk.php`, `shoplist.php`, `pricejk.php`, `fakalist.php`,
+`userlist.php`, `invite.php`, `article.php`.
+
+Remaining goto pages:
 
 | File | goto count (approx.) |
 |---|---:|
-| `admin/shoplist.php` | 625 |
-| `admin/pricejk.php` | 841 |
-| `admin/userlist.php` | 1116 |
-| `admin/fakalist.php` | 1225 |
-| `admin/invite.php` | 1417 |
-| `admin/article.php` | 1785 |
 | `admin/account.php` | 1881 |
 | `admin/shequlist.php` | 1918 |
 | `admin/sitelist.php` | 2367 |

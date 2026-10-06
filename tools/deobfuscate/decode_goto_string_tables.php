@@ -21,6 +21,21 @@ if ($source === false) {
 }
 
 $tables = [];
+
+$decodeTable = static function (string $delimiter, string $payload): array {
+    $parts = explode($delimiter, $payload);
+    $decoded = [];
+    foreach ($parts as $i => $part) {
+        if ($part === 'H*') {
+            $decoded[$i] = 'H*';
+            continue;
+        }
+        $bin = @pack('H*', $part);
+        $decoded[$i] = ($bin !== false && $bin !== '') ? $bin : $part;
+    }
+    return $decoded;
+};
+
 if (preg_match_all(
     '/\$GLOBALS\[([A-Za-z0-9_]+)\]\s*=\s*explode\(\s*"([^"]+)"\s*,\s*"([^"]*)"\s*\)\s*;/',
     $source,
@@ -28,19 +43,19 @@ if (preg_match_all(
     PREG_SET_ORDER
 )) {
     foreach ($matches as $match) {
-        $key = $match[1];
-        // Constant name may be used as key; keep both constant and literal forms.
-        $parts = explode($match[2], $match[3]);
-        $decoded = [];
-        foreach ($parts as $i => $part) {
-            if ($part === 'H*') {
-                $decoded[$i] = 'H*';
-                continue;
-            }
-            $bin = @pack('H*', $part);
-            $decoded[$i] = ($bin !== false && $bin !== '') ? $bin : $part;
-        }
-        $tables[$key] = $decoded;
+        $tables[$match[1]] = $decodeTable($match[2], $match[3]);
+    }
+}
+
+// Some pages assign the string table via call_user_func_array("explode", array(...)).
+if (preg_match_all(
+    '/call_user_func_array\(\s*"explode"\s*,\s*array\(\s*"([^"]+)"\s*,\s*"([^"]*)"\s*\)\s*\)/',
+    $source,
+    $matches,
+    PREG_SET_ORDER
+)) {
+    foreach ($matches as $index => $match) {
+        $tables['explode_call_' . $index] = $decodeTable($match[1], $match[2]);
     }
 }
 
