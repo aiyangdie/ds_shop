@@ -44,13 +44,12 @@ until you run the switch tool.
 Goto-flattened admin pages rewritten from decoded hex string tables:
 
 `classlist.php`, `orderjk.php`, `shoplist.php`, `pricejk.php`, `fakalist.php`,
-`userlist.php`, `invite.php`, `article.php`.
+`userlist.php`, `invite.php`, `article.php`, `account.php`.
 
 Remaining goto pages:
 
 | File | goto count (approx.) |
 |---|---:|
-| `admin/account.php` | 1881 |
 | `admin/shequlist.php` | 1918 |
 | `admin/sitelist.php` | 2367 |
 | `admin/clone.php` | 2637 |
