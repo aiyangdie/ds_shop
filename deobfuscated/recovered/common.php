@@ -167,7 +167,7 @@ if ($siterow && (int) $siterow['status'] === 1 && (int) $siterow['power'] > 0) {
     $expired = !empty($conf['fenzhan_expiry']) && !empty($siterow['endtime']) && $siterow['endtime'] < $date;
     if (!$expired) {
         $is_fenzhan = true;
-        $conf = array_merge($conf, merge_site_conf($siterow));
+        $conf = merge_site_conf($conf, $siterow);
     }
 }
 
