@@ -376,9 +376,10 @@ if ($mod === 'account') {
 } elseif ($mod === 'captcha') {
     echo '<div class="block-title"><h3 class="panel-title">滑动验证码设置</h3></div>';
     echo '<form action="./set.php?mod=captcha_n" method="post" class="form-horizontal" role="form">';
-    echo recovered_group('验证码开关', recovered_select('captcha_open', ['0' => '关闭', '1' => '极限滑动验证码', '2' => '顶象滑动验证码', '3' => 'VAPTCHA手势验证码']));
+    echo recovered_group('验证码开关', recovered_select('captcha_open', ['0' => '关闭', '1' => '极限滑动验证码', '2' => '顶象滑动验证码', '3' => '自定义验证接口']));
     echo recovered_group('ID', recovered_input('captcha_id'));
     echo recovered_group('KEY', recovered_input('captcha_key'));
+    echo recovered_group('本站校验地址', recovered_input('captcha_verify_url', '留空则用本站图形验证码会话'));
     echo recovered_group('免费商品开启', recovered_select('captcha_open_free', $offon));
     echo recovered_group('注册开启', recovered_select('captcha_open_reg', $offon));
     echo recovered_group('登录开启', recovered_select('captcha_open_login', $offon));
@@ -468,20 +469,21 @@ if ($mod === 'account') {
     echo recovered_group('收信邮箱', recovered_input('mail_recv', '不填默认为发信邮箱'));
     echo '<div class="form-group"><div class="col-sm-offset-2 col-sm-10"><input type="submit" name="submit" value="修改" class="btn btn-primary btn-block"/><br/>[<a href="set.php?mod=mailtest">给当前邮箱发一封测试邮件</a>]</div></div>';
     echo '<div class="block-title"><h3 class="panel-title">微信消息设置</h3></div>';
-    echo recovered_group('微信消息接口', recovered_select('wechat_api', ['0' => 'ServerChan(ftqq)', '1' => 'WxPusher']));
-    echo recovered_group('SCKEY', recovered_input('wechat_sckey'));
-    echo recovered_group('appToken', recovered_input('wechat_apptoken'));
+    echo recovered_group('微信消息接口', recovered_select('wechat_api', ['0' => '关闭', '1' => '本站Webhook']));
+    echo recovered_group('Webhook地址', recovered_input('wechat_webhook', 'http(s) 开头的本站或自建通知接口'));
+    echo recovered_group('备用地址', recovered_input('wechat_sckey', '也可填完整 http(s) URL'));
+    echo recovered_group('appToken', recovered_input('wechat_apptoken', '若为 http(s) URL 则作为通知地址'));
     echo recovered_group('用户UID', recovered_input('wechat_appuid'));
     echo '</form>';
 } elseif ($mod === 'oauth') {
     echo '<div class="block-title"><h3 class="panel-title">快捷登录配置</h3></div>';
     echo '<form onsubmit="return saveSetting(this)" method="post" class="form-horizontal" role="form">';
-    echo recovered_group('QQ快捷登录方式', recovered_select('login_qq', ['0' => '关闭', '1' => '彩虹聚合登录', '2' => '手机QQ扫码登录']), 3);
-    echo recovered_group('微信快捷登录方式', recovered_select('login_wx', ['0' => '关闭', '1' => '彩虹聚合登录']), 3);
-    echo recovered_group('API接口地址', recovered_input('login_apiurl', 'API地址要以http://或https://开头，以/结尾'), 3);
+    echo recovered_group('QQ快捷登录方式', recovered_select('login_qq', ['0' => '关闭', '1' => '自定义聚合登录', '2' => '本站QQ扫码登录']), 3);
+    echo recovered_group('微信快捷登录方式', recovered_select('login_wx', ['0' => '关闭', '1' => '自定义聚合登录']), 3);
+    echo recovered_group('API接口地址', recovered_input('login_apiurl', '本站或自建聚合登录地址，以http://或https://开头，以/结尾'), 3);
     echo recovered_group('应用APPID', recovered_input('login_appid'), 3);
     echo recovered_group('应用APPKEY', recovered_input('login_appkey'), 3);
-    echo '<p>QQ快捷登录接口是使用彩虹聚合登录系统搭建的站点，并非QQ互联官方接口。<br/>QQ快捷登录开启后请勿随意更换登录API站点，否则会导致之前以QQ快捷登录注册的用户全部无法登录。<br/>手机QQ扫码登录使用更方便，登录凭证以用户注册时填写的QQ为准</p>';
+    echo '<p>自定义聚合登录填写你们自己的登录接口。本站QQ扫码走 user/qrlogin.php，不经过外部解码服务。</p>';
     echo '<div class="form-group"><div class="col-sm-offset-3 col-sm-9"><input type="submit" name="submit" value="修改" class="btn btn-primary btn-block"/></div></div></form>';
 } elseif ($mod === 'cron') {
     $cronkey = recovered_conf('cronkey');

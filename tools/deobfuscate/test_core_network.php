@@ -28,16 +28,22 @@ if ($post['method'] !== 'POST' || $post['body'] !== 'x=1' || $post['headers']['R
     throw new RuntimeException('shequ_get_curl parity failure');
 }
 
-$conf = ['wechat_api' => 1, 'wechat_apptoken' => 'TOKEN', 'wechat_appuid' => 'UID'];
+$conf = ['wechat_webhook' => 'https://notify.example/hook'];
 send_wechat('标题', '内容');
-if ($recordedGetCurlCalls[0][0] !== 'https://wxpusher.zjiecode.com/api/send/message' || $recordedGetCurlCalls[0][7] !== ['Content-Type: application/json; charset=UTF-8']) {
-    throw new RuntimeException('send_wechat Wxpusher parity failure');
+if ($recordedGetCurlCalls[0][0] !== 'https://notify.example/hook') {
+    throw new RuntimeException('send_wechat webhook failure');
 }
 $recordedGetCurlCalls = [];
-$conf = ['wechat_api' => 2, 'wechat_sckey' => 'KEY'];
+$conf = ['wechat_sckey' => 'https://own.example/sckey'];
 send_wechat('标题', '内容');
-if ($recordedGetCurlCalls[0][0] !== 'https://sc.ftqq.com/KEY.send') {
-    throw new RuntimeException('send_wechat ServerChan parity failure');
+if ($recordedGetCurlCalls[0][0] !== 'https://own.example/sckey') {
+    throw new RuntimeException('send_wechat sckey url failure');
+}
+$recordedGetCurlCalls = [];
+$conf = ['wechat_sckey' => 'KEY'];
+send_wechat('标题', '内容');
+if ($recordedGetCurlCalls !== []) {
+    throw new RuntimeException('send_wechat must ignore non-url vendor keys');
 }
 
 $recordedGetCurlCalls = [];

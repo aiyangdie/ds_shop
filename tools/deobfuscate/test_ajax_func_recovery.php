@@ -25,7 +25,7 @@ foreach ([
     'function display_third_title(',
     'function article_url(',
     'function adminpermission(',
-    'https://0.vaptcha.com/verify',
+    'captcha_verify_url',
 ] as $needle) {
     if (strpos($basic, $needle) === false) {
         throw new RuntimeException('missing basic fragment: ' . $needle);
@@ -45,7 +45,7 @@ foreach ([
     'SELECT sum(money) FROM `pre_pay`',
     'assets/img/',
     'dwz_',
-    'dsapi.cccyun.cc/qrcode.php',
+    '请使用本站QQ扫码完成验证',
     "APP' . \$host . 'KEY",
 ] as $needle) {
     if (strpos($rest, $needle) === false) {
@@ -80,6 +80,7 @@ if (article_url(12, 'x=1') !== './article-12.html?x=1') {
     throw new RuntimeException('article_url rewrite failed');
 }
 
+$conf = ['captcha_verify_url' => 'https://own.test/verify'];
 $GLOBALS['response'] = '{"success":1}';
 $GLOBALS['calls'] = [];
 if (!vaptcha_verify('VID', 'SECRET', 'TOKEN', '1.2.3.4')) {

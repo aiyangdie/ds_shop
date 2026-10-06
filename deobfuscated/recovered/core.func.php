@@ -364,38 +364,24 @@ function send_wechat($title, $content)
 {
     global $conf;
 
-    if (empty($conf['wechat_api'])) {
+    $url = '';
+    if (!empty($conf['wechat_webhook'])) {
+        $url = trim((string) $conf['wechat_webhook']);
+    } elseif (!empty($conf['wechat_sckey']) && preg_match('#^https?://#i', (string) $conf['wechat_sckey'])) {
+        $url = trim((string) $conf['wechat_sckey']);
+    } elseif (!empty($conf['wechat_apptoken']) && preg_match('#^https?://#i', (string) $conf['wechat_apptoken'])) {
+        $url = trim((string) $conf['wechat_apptoken']);
+    }
+    if ($url === '') {
         return null;
     }
 
-    if ((int) $conf['wechat_api'] === 1) {
-        $payload = json_encode([
-            'appToken' => $conf['wechat_apptoken'],
-            'content' => $content,
-            'summary' => $title,
-            'contentType' => 3,
-            'uids' => [$conf['wechat_appuid']],
-        ]);
-        get_curl(
-            'https://wxpusher.zjiecode.com/api/send/message',
-            $payload,
-            0,
-            0,
-            0,
-            0,
-            0,
-            ['Content-Type: application/json; charset=UTF-8']
-        );
-        return null;
-    }
-
-    if (!empty($conf['wechat_sckey'])) {
-        get_curl(
-            'https://sc.ftqq.com/' . $conf['wechat_sckey'] . '.send',
-            http_build_query(['text' => $title, 'desp' => $content])
-        );
-    }
-
+    get_curl($url, http_build_query([
+        'text' => $title,
+        'desp' => $content,
+        'title' => $title,
+        'content' => $content,
+    ]));
     return null;
 }
 

@@ -73,15 +73,30 @@ function getrizhi($uin, $page = 1)
 
 function vaptcha_verify($id, $secretKey, $token, $ip)
 {
-    $response = get_curl('https://0.vaptcha.com/verify', http_build_query([
-        'id' => $id,
-        'secretkey' => $secretKey,
-        'scene' => 0,
-        'token' => $token,
-        'ip' => $ip,
-    ]));
-    $result = json_decode($response, true);
-    return isset($result['success']) && (int) $result['success'] === 1;
+    global $conf;
+
+    $token = (string) $token;
+    if ($token === '') {
+        return false;
+    }
+
+    $api = isset($conf['captcha_verify_url']) ? trim((string) $conf['captcha_verify_url']) : '';
+    if ($api !== '') {
+        $response = get_curl($api, http_build_query([
+            'id' => $id,
+            'secretkey' => $secretKey,
+            'scene' => 0,
+            'token' => $token,
+            'ip' => $ip,
+        ]));
+        $result = json_decode($response, true);
+        return isset($result['success']) && (int) $result['success'] === 1;
+    }
+
+    if (isset($_SESSION['vc_code']) && strtolower((string) $_SESSION['vc_code']) === strtolower($token)) {
+        return true;
+    }
+    return isset($_SESSION['captcha_token']) && hash_equals((string) $_SESSION['captcha_token'], $token);
 }
 
 function display_third_title($code)

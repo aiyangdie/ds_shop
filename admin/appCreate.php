@@ -37,9 +37,9 @@ if ($islogin == 1) {
                         <div class="form-group">
                             <label class="col-sm-3 control-label">下发App生成接口</label>
                             <div class="col-sm-9">
-                                <input type="text" class="form-control" name="appcreate_source" value="<?php echo $conf['appcreate_source']?>" placeholder="可留空，留空则默认使用系统集成自带" />
+                                <input type="text" class="form-control" name="appcreate_source" value="<?php echo $conf['appcreate_source']?>" placeholder="填写本站APP生成接口，例如 http://127.0.0.1:8081" />
                                 <div class="well well-sm">
-                                    使用前请先确保程序自带集成的方式与被对接的接口业务逻辑是否一致。
+                                    必须填写你们自己的生成接口，不再使用外部默认平台。
                                 </div>
                             </div>
                         </div>

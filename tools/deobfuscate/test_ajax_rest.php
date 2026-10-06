@@ -132,14 +132,18 @@ if (!isset($CACHE->store['dwz_' . md5('https://shop.example/?i=1')])) {
 }
 
 $GLOBALS['calls'] = [];
-$GLOBALS['response'] = '{"code":0,"uin":"123456","msg":"succ"}';
-$_SESSION = [];
+$_SESSION = ['findpwd_qq' => '123456'];
 $qr = qrcodelogin('IMGDATA');
-if ($qr['uin'] !== '123456' || $_SESSION['findpwd_qq'] !== '123456') {
-    throw new RuntimeException('qrcodelogin failed');
+if ($qr['uin'] !== '123456' || $qr['code'] !== 1) {
+    throw new RuntimeException('qrcodelogin session failed');
 }
-if (strpos($GLOBALS['calls'][0][0], 'dsapi.cccyun.cc/qrcode.php') === false || strpos($GLOBALS['calls'][0][1], 'a=') !== 0) {
-    throw new RuntimeException('qrcodelogin endpoint failed');
+if (!empty($GLOBALS['calls'])) {
+    throw new RuntimeException('qrcodelogin must not call external decode');
+}
+$_SESSION = [];
+$qr = qrcodelogin();
+if ($qr['code'] !== -2) {
+    throw new RuntimeException('qrcodelogin local prompt failed');
 }
 
 echo "ajax-rest parity checks passed\n";

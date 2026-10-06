@@ -263,19 +263,11 @@ function fanghongdwz($url, $force = false)
     return $short;
 }
 
-function qrcodelogin($image)
+function qrcodelogin($image = null)
 {
-    $image = trim((string) $image);
-    if ($image === '') {
-        return ['code' => -1, 'msg' => '图片不能为空'];
+    if (!empty($_SESSION['findpwd_qq'])) {
+        $uin = (string) $_SESSION['findpwd_qq'];
+        return ['code' => 1, 'saveOK' => 0, 'msg' => 'succ', 'uin' => $uin];
     }
-    $response = get_curl('http://dsapi.cccyun.cc/qrcode.php', 'a=' . urlencode($image));
-    $result = json_decode($response, true);
-    if (!is_array($result)) {
-        return ['code' => -1, 'msg' => '二维码解析失败'];
-    }
-    if (!empty($result['uin'])) {
-        $_SESSION['findpwd_qq'] = $result['uin'];
-    }
-    return $result;
+    return ['code' => -2, 'saveOK' => -1, 'msg' => '请使用本站QQ扫码完成验证'];
 }

@@ -51,6 +51,10 @@ foreach ([
     'api.php?act=change&pid=',
     'function checkepayurl(var1,var2)',
     'micropay_n',
+    'captcha_verify_url',
+    'wechat_webhook',
+    '自定义验证接口',
+    '本站QQ扫码登录',
 ] as $needle) {
     if (strpos($src, $needle) === false) {
         throw new RuntimeException('missing fragment: ' . $needle);

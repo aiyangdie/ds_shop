@@ -18,8 +18,10 @@ if (getFakaInput() !== '自定义') throw new RuntimeException('getFakaInput fai
 $conf = ['article_rewrite' => 1];
 if (article_url(12, 'x=1') !== './article-12.html?x=1') throw new RuntimeException('article_url failed');
 
+$conf = ['captcha_verify_url' => 'https://own.test/verify'];
 $response = '{"success":1}';
 if (!vaptcha_verify('VID', 'SECRET', 'TOKEN', '1.2.3.4')) throw new RuntimeException('vaptcha_verify failed');
+if ($calls[0][0] !== 'https://own.test/verify') throw new RuntimeException('vaptcha url failed');
 if ($calls[0][1] !== 'id=VID&secretkey=SECRET&scene=0&token=TOKEN&ip=1.2.3.4') throw new RuntimeException('vaptcha payload failed');
 
 $conf = ['qzone_shuoshuo_api' => 'https://fixture/shuo'];
