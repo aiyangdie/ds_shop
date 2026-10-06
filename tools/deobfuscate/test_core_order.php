@@ -51,10 +51,32 @@ final class TraceDB
     public $tools = [];
     public $shequ = [];
     public $faka = [];
+    public $sites = [];
+    public $cart = [];
+    public $insertId = 500;
 
     public function beginTransaction() { $this->calls[] = ['beginTransaction']; return true; }
     public function commit() { $this->calls[] = ['commit']; return true; }
     public function rollBack() { $this->calls[] = ['rollBack']; return true; }
+    public function lastInsertId() { $this->calls[] = ['lastInsertId']; return $this->insertId; }
+
+    public function getColumn($query, $params = [])
+    {
+        $this->calls[] = ['getColumn', $query];
+        if (stripos($query, 'power') !== false && preg_match("/zid='?(\\d+)/", $query, $m) && isset($this->sites[$m[1]])) {
+            return $this->sites[$m[1]]['power'];
+        }
+        if (stripos($query, 'pre_faka') !== false) {
+            $n = 0;
+            foreach ($this->faka as $row) {
+                if (empty($row['orderid'])) {
+                    $n++;
+                }
+            }
+            return $n;
+        }
+        return 0;
+    }
 
     public function getRow($query, $params = [])
     {
@@ -68,12 +90,27 @@ final class TraceDB
         if (stripos($query, 'pre_shequ') !== false && preg_match("/id='?(\\d+)/", $query, $m) && isset($this->shequ[$m[1]])) {
             return $this->shequ[$m[1]];
         }
+        if (stripos($query, 'pre_site') !== false && preg_match("/zid='?(\\d+)/", $query, $m) && isset($this->sites[$m[1]])) {
+            return $this->sites[$m[1]];
+        }
         return null;
     }
 
     public function query($query)
     {
         $this->calls[] = ['query', $query];
+        if (stripos($query, 'pre_cart') !== false) {
+            $rows = [];
+            if (preg_match('/IN \\(([^)]+)\\)/i', $query, $m)) {
+                foreach (explode(',', $m[1]) as $id) {
+                    $id = trim($id, " '");
+                    if (isset($this->cart[$id])) {
+                        $rows[] = $this->cart[$id];
+                    }
+                }
+            }
+            return new TraceResult($rows);
+        }
         $limit = 100;
         if (preg_match('/LIMIT\\s+(\\d+)/i', $query, $m)) {
             $limit = (int) $m[1];
@@ -90,6 +127,11 @@ final class TraceDB
     public function exec($query, $params = [])
     {
         $this->calls[] = ['exec', $query, $params];
+        if (stripos($query, 'INSERT INTO `pre_orders`') !== false || stripos($query, 'INSERT INTO pre_orders') !== false
+            || stripos($query, 'INSERT INTO `pre_site`') !== false) {
+            $this->insertId++;
+            return 1;
+        }
         if (stripos($query, 'pre_faka') !== false && preg_match("/kid='?(\\d+)/", $query, $m) && isset($this->faka[$m[1]])) {
             $this->faka[$m[1]]['orderid'] = 1;
         }
@@ -111,8 +153,40 @@ $conf = [
     'mail_apiuser' => 'u',
     'mail_apikey' => 'k',
     'mail_name2' => 'from@test',
+    'message_buy' => 1,
+    'message_duijie' => 1,
+    'message_fakastock' => 1,
+    'fenzhan_gift' => '100:10|50:5',
+    'fenzhan_free' => 5,
+    'fenzhan_cost' => 10,
+    'fenzhan_cost2' => 20,
+    'title' => '主站标题',
+    'keywords' => 'kw',
+    'description' => 'desc',
+    'tixian_limit' => 0,
 ];
+$date = '2026-10-05 12:00:00';
 $_SERVER['HTTP_HOST'] = 'shop.test';
+$GLOBALS['messageSendLog'] = [];
+$GLOBALS['priceLog'] = [];
+
+if (!class_exists('lib\\MessageSend', false)) {
+    eval('namespace lib { class MessageSend {
+        static public function orderbuy() { $GLOBALS["messageSendLog"][] = ["orderbuy", func_get_args()]; }
+        static public function orderbuy_fail() { $GLOBALS["messageSendLog"][] = ["orderbuy_fail", func_get_args()]; }
+        static public function faka_stock() { $GLOBALS["messageSendLog"][] = ["faka_stock", func_get_args()]; }
+    }}');
+}
+if (!class_exists('lib\\Price', false)) {
+    eval('namespace lib { class Price {
+        public function __construct($zid, $siterow = null) { $GLOBALS["priceLog"][] = ["ctor", $zid]; }
+        public function setToolInfo($tid, $row = null) { $GLOBALS["priceLog"][] = ["setToolInfo", $tid]; }
+        public function setToolProfit($tid, $num, $name, $money, $orderid, $userid = 0) {
+            $GLOBALS["priceLog"][] = ["setToolProfit", $tid, $num, $name, $money, $orderid, $userid];
+            return true;
+        }
+    }}');
+}
 
 $baseOrder = [
     'id' => 101, 'tid' => 5, 'input' => '123456@qq.com', 'input2' => 'x2', 'input3' => 'x3',
@@ -192,5 +266,81 @@ $DB = new TraceDB();
 $DB->orders[101] = $baseOrder;
 $DB->tools[5] = ['tid'=>5,'name'=>'手动','is_curl'=>0,'shequ'=>0,'goods_id'=>0,'goods_type'=>0,'goods_param'=>'','curl'=>'','price'=>'5.00'];
 assertTrue(do_goods(101) === '该商品未配置对接或自动发卡', 'manual product');
+
+// --- doOrder / processOrder ---
+$basePay = [
+    'tid' => 5,
+    'zid' => 2,
+    'input' => '123456@qq.com|p2|p3',
+    'num' => 2,
+    'name' => '测试商品',
+    'money' => '10.00',
+    'trade_no' => 'T20261005001',
+    'userid' => 'cookie99',
+    'type' => 'alipay',
+    'blockdj' => 0,
+];
+$baseTool = [
+    'tid' => 5, 'name' => '测试商品', 'is_curl' => 0, 'prid' => 0, 'price' => '5.00',
+    'cost' => '3.00', 'cost2' => '4.00', 'stock' => 100, 'shequ' => 0,
+    'goods_id' => 0, 'goods_type' => 0, 'goods_param' => '', 'curl' => '',
+    'alert' => '请妥善保管', 'desc' => '', 'inputs' => 'qq|pass', 'input' => 'QQ', 'value' => 1,
+];
+
+$DB = new TraceDB();
+$DB->tools[5] = $baseTool;
+$GLOBALS['messageSendLog'] = [];
+$GLOBALS['priceLog'] = [];
+assertTrue(doOrder($basePay, true) === 501, 'doOrder manual id');
+assertTrue($GLOBALS['priceLog'][0][0] === 'ctor', 'doOrder profit ctor');
+assertTrue($GLOBALS['messageSendLog'][0][0] === 'orderbuy', 'doOrder buy notify');
+
+$DB = new TraceDB();
+$DB->tools[5] = array_merge($baseTool, ['is_curl' => 4, 'name' => '测试卡密']);
+$DB->faka = [
+    1 => ['kid' => 1, 'km' => 'CARD-AAA', 'pw' => 'p1', 'orderid' => 0],
+    2 => ['kid' => 2, 'km' => 'CARD-BBB', 'pw' => 'p2', 'orderid' => 0],
+];
+$GLOBALS['mailLog'] = [];
+$GLOBALS['messageSendLog'] = [];
+assertTrue(doOrder($basePay, false) === 501, 'doOrder faka id');
+assertTrue(strpos($GLOBALS['mailLog'][1]['msg'], 'CARD-AAA') !== false, 'doOrder faka mail');
+assertTrue($GLOBALS['messageSendLog'][0][0] === 'faka_stock', 'doOrder faka stock notify');
+
+$DB = new TraceDB();
+$DB->sites[8] = ['zid' => 8, 'rmb' => 20, 'rmbtc' => 0, 'power' => 1];
+$pay = $basePay;
+$pay['tid'] = -1;
+$pay['input'] = '8';
+$pay['money'] = '100.00';
+assertTrue(processOrder($pay) === true, 'processOrder recharge');
+
+$DB = new TraceDB();
+$DB->sites[8] = ['zid' => 8, 'rmb' => 20, 'rmbtc' => 0, 'power' => 1];
+$pay['money'] = '120.00';
+assertTrue(processOrder($pay) === true, 'processOrder recharge gift');
+$giftPoint = null;
+foreach ($DB->calls as $call) {
+    if ($call[0] === 'exec' && isset($call[2][':action']) && $call[2][':action'] === '赠送') {
+        $giftPoint = $call[2];
+    }
+}
+assertTrue($giftPoint !== null && (float) $giftPoint[':point'] === 12.0, 'processOrder gift 10%');
+
+$DB = new TraceDB();
+$DB->tools[5] = $baseTool;
+$DB->tools[6] = array_merge($baseTool, ['tid' => 6, 'name' => '商品B']);
+$DB->cart[11] = [
+    'id' => 11, 'tid' => 5, 'input' => 'a@qq.com|x', 'num' => 1, 'money' => '5.00',
+    'zid' => 2, 'userid' => 'cookie99', 'blockdj' => 0, 'status' => 1,
+];
+$DB->cart[12] = [
+    'id' => 12, 'tid' => 6, 'input' => 'b@qq.com|y', 'num' => 2, 'money' => '10.00',
+    'zid' => 2, 'userid' => 'cookie99', 'blockdj' => 0, 'status' => 1,
+];
+$pay = $basePay;
+$pay['tid'] = -3;
+$pay['input'] = '11|12';
+assertTrue(processOrder($pay) === 502, 'processOrder cart last id');
 
 echo "core-order parity checks passed\n";

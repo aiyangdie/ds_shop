@@ -24,6 +24,15 @@ placeholder URL builder `do_curl` (mode 9) used by order docking callbacks.
 the HTML `sysmsg` page renderer (mode 16), and the admin security checklist
 `sec_check` (mode 19), including weak-password, archive, and PHP version checks.
 
-`core-order.php` contains `do_goods` (mode 11): automatic card delivery, community
-plugin docking via `third_call`, and the is_curl=1 URL visitor path.
+`core-order.php` contains the order fulfillment batch:
+
+- `do_goods` (mode 11): automatic card delivery, community plugin docking via
+  `third_call`, and the is_curl=1 URL visitor path.
+- `doOrder` (mode 7): create `pre_orders`, update sales/stock, then fulfill via
+  faka / shequ / curl, optionally writing site profit and buy/fail notifications.
+- `processOrder` (mode 8): paid-trade dispatcher for recharge (`tid=-1`), site
+  open/upgrade (`tid=-2`), cart checkout (`tid=-3`), and ordinary goods orders,
+  including invite-reward follow-up when configured.
+
+All 24 protected core modes are now present as readable PHP in this directory.
 
