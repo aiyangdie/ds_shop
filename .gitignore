@@ -12,6 +12,13 @@ _dbg.txt
 .playwright-mcp/
 supplier/data/*.log
 supplier/data/*.lock
+supplier/config.php
+app.log
+emu-*.log
+emulator-*.log
+tools/deobfuscate/_*.php
+tools/deobfuscate/_*.txt
+tools/deobfuscate/_*.bin
 tools/appbuild/env.local.php
 tools/appbuild/gradle-*/
 tools/appbuild/*.zip

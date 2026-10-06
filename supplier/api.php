@@ -13,6 +13,9 @@ $CARDS_FILE = $DATA_DIR . '/cards.json';
 $ORDERS_FILE = $DATA_DIR . '/orders.json';
 $USER = 'supplier';
 $PASS = 'supplier123';
+if (is_file(__DIR__ . '/config.php')) {
+    require __DIR__ . '/config.php';
+}
 
 // 该目录只用于本机联调，避免误上传后从公网访问演示账号和卡密。
 $REMOTE_ADDR = isset($_SERVER['REMOTE_ADDR']) ? trim($_SERVER['REMOTE_ADDR']) : '';

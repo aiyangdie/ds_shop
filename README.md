@@ -1,7 +1,8 @@
 # 彩虹自助下单系统（ds_shop）
 
-> PHP 版本：**必须 7.4**（核心含混淆代码，PHP 8.x 不可用）  
-> 本地推荐解释器：`C:\tools\php74\php.exe`
+> PHP 版本：**7.4（主要验证环境）**  
+> 本地推荐解释器：`C:\tools\php74\php.exe`  
+> 业务核心（`includes/core.func.php`、`includes/ajax.func.php`、公共入口与已恢复后台页）已替换为可读源码。请勿把真实 `config.php` 提交进仓库。
 
 ____
 * 去除所有授权验证
@@ -161,3 +162,81 @@ __使用协议__
 * 此系统仅供个人学习、研究之用，请勿用于商业用途。
 * 不提供任何技术支持。
 * 在您下载源码后视为您已经了解使用协议并知晓法律协议。
+
+---
+
+## 环境要求
+
+- PHP **7.4**（本仓库以 `C:\tools\php74\php.exe` 作为语法与自动测试环境）
+- MySQL / MariaDB（InnoDB，utf8mb4）
+- Web 服务器：Nginx / Apache，或 PHP 内置服务器（仅本地开发）
+
+建议启用的扩展：`pdo_mysql`、`mysqli`、`curl`、`openssl`、`mbstring`、`gd`、`json`、`fileinfo`、`zip`。AI 附件云存储、邮件、支付回调另需 `curl`/`openssl`。
+
+## 安装步骤
+
+1. 复制源码到 Web 目录，保证 `assets/uploads/`、`install/` 可写。
+2. 复制 `config.example.php` 为 `config.php`（`config.php` 已被 gitignore）。
+3. 创建空数据库，在 `config.php` 填写主机、端口、用户、密码、库名；表前缀默认 `shua`。
+4. 浏览器访问 `/install/`，按向导导入结构。也可手动导入 `install/` 下的安装 SQL。
+5. 安装完成后应生成 `install/install.lock`（已 gitignore）。
+6. 如需 APP 工厂字段，执行 `install/update_appfactory.sql`（或依赖运行时补齐）。
+7. 登录后台修改默认管理员密码，并在「系统设置」中填写站点、支付、邮件等**自己的**凭据。
+
+Windows 本地：
+
+```bat
+copy config.example.php config.php
+REM 编辑 config.php 后：
+start-local.bat
+start-supplier.bat
+```
+
+- 未填写数据库时访问首页会提示「你还没安装」。
+- 主站默认 `http://127.0.0.1:8080/`，演示货源 `http://127.0.0.1:8081/`。
+- 安装向导创建的默认管理员账号以安装页提示为准；`start-local.bat` 中的 `admin / 123456` 仅适用于你按演示库初始化之后的本地环境，上线前必须修改。
+
+## 配置说明
+
+| 文件 | 作用 |
+|------|------|
+| `config.example.php` | 数据库占位示例 |
+| `.env.example` | 可选环境变量占位，本项目主路径仍是 `config.php` |
+| `config.php` | 真实数据库配置，禁止提交 |
+| `supplier/config.sample.php` | 演示货源账号示例，复制为 `supplier/config.php` |
+| 后台「系统设置」 | 支付、短信、邮件、AI、验证码等运行时配置 |
+
+支付回调入口在 `other/`（以及易支付 notify/return）。请使用沙箱或录制替身验证参数，不要对真实商户做破坏性下单。
+
+## 常见问题
+
+**访问提示还没安装：** `config.php` 的 `user`/`pwd`/`dbname` 为空，或库中还没有 `pre_config` 表。  
+**PHP 8 报错：** 未作为发布验证环境。请先用 PHP 7.4。部分第三方库在 8.x 上可能仍可用，但不保证。  
+**货源对接卡住：** 货源 URL 不要与主站使用同一 PHP 内置服务器端口。  
+**验证码/字体失败：** 见 `includes/ValidateCode.class.php` 的字体回退。  
+**定时任务：** 配置 `cron.php` 与后台「监控地址」。
+
+## 安全注意事项
+
+- 不要提交数据库密码、支付密钥、短信/邮件凭据、AI Key、Cookie 密钥。
+- 公网关闭 `ajax.php?act=testpay` 一类模拟支付，或限制为本地环境。
+- 安装完成后删除或禁止访问 `install/`。
+- 后台、分站默认口令必须立即修改。
+- `includes/common.php` 中的 `$password_hash` 是历史 Cookie 盐常量，部署后应视为公开算法盐，安全依赖独立的 `syskey` 与强管理员密码。
+
+## 已知限制
+
+- PHP 8.x 未作为发布门禁验证。
+- 真实支付、短信、邮件、第三方社区下单未做破坏性联调；自动测试使用替身。
+- `tools/deobfuscate/` 是恢复与回归工具，不是运行时依赖。
+- 部分前台模板与第三方编辑器（KindEditor 等）版权/授权状态需使用者自行核对。
+
+## 许可证状态（待确认）
+
+本仓库**不能**被理解为「全部代码已采用某一种 OSI 许可证」。
+
+- 主体业务代码来源于历史「彩虹自助下单 / 彩虹代刷」衍生版本，上游授权范围需发布者自行核对。README 中「已和原作者联系」属于历史声明，开源整理过程**未重新取证**。
+- 第三方资源（Bootstrap、Layer、jQuery、KindEditor、PHPMailer、字体、模板皮肤等）请保留其原有版权声明，并在发布前逐项确认许可证是否允许再分发。
+- 在许可证确认前，建议仅作学习研究，不要声称本仓库整体为 MIT/Apache/GPL。
+
+详见仓库根目录 `THIRD_PARTY_NOTICES.md`。
