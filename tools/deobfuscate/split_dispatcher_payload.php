@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 if ($argc < 3) {
-    fwrite(STDERR, "Usage: php split_dispatcher_payload.php <payload.bin> <output-dir>\n");
+    fwrite(STDERR, "Usage: php split_dispatcher_payload.php <payload.bin> <output-dir> [expected-count]\n");
     exit(2);
 }
 
@@ -19,10 +19,11 @@ if (!is_dir($outputDir) && !mkdir($outputDir, 0777, true) && !is_dir($outputDir)
     exit(1);
 }
 
+$expectedCount = isset($argv[3]) ? (int) $argv[3] : 24;
 $pattern = '/function\s+([A-Za-z_][A-Za-z0-9_]*)\s*(\([^)]*\))\s*\{(.*?)\}/s';
 preg_match_all($pattern, $payload, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
-if (count($matches) !== 24) {
-    fwrite(STDERR, sprintf("Expected 24 wrappers; found %d\n", count($matches)));
+if (count($matches) !== $expectedCount) {
+    fwrite(STDERR, sprintf("Expected %d wrappers; found %d\n", $expectedCount, count($matches)));
     exit(1);
 }
 
