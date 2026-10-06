@@ -20,6 +20,8 @@ foreach ([
     'assets/js/shopedit.js?ver=',
     'shopdesc_editor',
     'select2/4.0.10',
+    'display_third_title($res[\'type\'])',
+    'onsubmit="return checkinput()"',
 ] as $needle) {
     if (strpos($src, $needle) === false) {
         throw new RuntimeException('missing fragment: ' . $needle);

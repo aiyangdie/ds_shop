@@ -53,9 +53,8 @@ The live files stay protected until an explicit switch.
 
 `ajax.func.php` is the assembled drop-in for the 17 nested-eval ajax helpers
 (`getDatePoint` through `adminpermission`). Reconstruction is call-site plus
-fragment tests, not bytecode parity. Live `includes/ajax.func.php` stays protected.
+fragment tests, not bytecode parity. Live `includes/ajax.func.php` stays protected
+until `tools/deobfuscate/switch_recovered_ajax.php` is run.
 
-`ajax-basic.php` begins the readable replacement for `includes/ajax.func.php`.
-It currently covers the card-input label, Qzone list wrappers, Vaptcha,
-third-party source titles, article URLs, and admin permission checks.
+`ajax-basic.php` is a compatibility include that loads `ajax.func.php`.
 

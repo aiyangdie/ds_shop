@@ -79,7 +79,7 @@ $rs = $DB->query('SELECT * FROM pre_shequ order by id asc');
 while ($res = $rs->fetch()) {
     $remark = $res['remark'] ? ' (' . htmlspecialchars((string) $res['remark']) . ')' : '';
     $shequselect .= '<option value="' . $res['id'] . '" type="' . htmlspecialchars((string) $res['type'])
-        . '" domain="' . htmlspecialchars((string) $res['url']) . '">[' . $res['id'] . '] '
+        . '" domain="' . htmlspecialchars((string) $res['url']) . '">[' . display_third_title($res['type']) . '] '
         . htmlspecialchars((string) $res['url']) . $remark . '</option>';
 }
 

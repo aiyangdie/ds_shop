@@ -47,6 +47,8 @@ php tools/deobfuscate/assemble_core_func.php
 php tools/deobfuscate/smoke_recovered_core.php
 php tools/deobfuscate/decode_goto_string_tables.php admin/classlist.php deobfuscated/stages/goto/classlist-strings.json
 php tools/deobfuscate/switch_recovered_core.php status
+php tools/deobfuscate/switch_recovered_ajax.php status
+php tools/deobfuscate/coverage_goto_recovery.php
 ```
 
 Goto-flattened pages store HTML/SQL in a hex `explode` table plus `pack(H*, …)`
