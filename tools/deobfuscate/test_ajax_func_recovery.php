@@ -11,9 +11,12 @@ if ($src === false || $basic === false || $rest === false) {
 }
 
 foreach (['ajax-basic.php', 'ajax-rest.php'] as $inc) {
-    if (strpos($src, $inc) === false) {
-        throw new RuntimeException('ajax.func.php missing include ' . $inc);
+    if (strpos($src, '// ---- from ' . $inc) === false) {
+        throw new RuntimeException('assembled ajax.func.php missing section ' . $inc);
     }
+}
+if (strpos($src, "require __DIR__") !== false) {
+    throw new RuntimeException('assembled ajax.func.php still requires sibling files');
 }
 
 foreach ([
