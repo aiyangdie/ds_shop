@@ -25,6 +25,4 @@ these stable modes:
 | 17 | `adminpermission` |
 
 The live file remains untouched. Readable reconstructions of all 17 wrappers
-are in `deobfuscated/recovered/ajax.func.php`. The raw dispatcher was captured
-through an isolated `cli-server` harness because the protected loader exits
-under CLI.
+are in `deobfuscated/recovered/ajax.func.php` (`ajax-basic.php` 8 + `ajax-rest.php` 9).

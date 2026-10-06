@@ -51,10 +51,8 @@ Goto-flattened admin pages rewritten from decoded hex string tables:
 Goto-flattened admin pages and `includes/common.php` now have recovered copies.
 The live files stay protected until an explicit switch.
 
-`ajax.func.php` is the assembled drop-in for the 17 nested-eval ajax helpers
-(`getDatePoint` through `adminpermission`). Reconstruction is call-site plus
-fragment tests, not bytecode parity. Live `includes/ajax.func.php` stays protected
-until `tools/deobfuscate/switch_recovered_ajax.php` is run.
-
-`ajax-basic.php` is a compatibility include that loads `ajax.func.php`.
+`ajax.func.php` is the assembled drop-in for all 17 nested-eval ajax helpers
+(8 in `ajax-basic.php`, 9 in `ajax-rest.php`). Reconstruction uses the captured
+dispatcher string tables plus call sites. Live `includes/ajax.func.php` stays
+protected until `tools/deobfuscate/switch_recovered_ajax.php` is run.
 
