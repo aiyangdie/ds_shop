@@ -45,13 +45,12 @@ Goto-flattened admin pages rewritten from decoded hex string tables:
 
 `classlist.php`, `orderjk.php`, `shoplist.php`, `pricejk.php`, `fakalist.php`,
 `userlist.php`, `invite.php`, `article.php`, `account.php`, `shequlist.php`,
-`sitelist.php`, `clone.php`. Recovered bootstrap: `includes/common.php`
-(as `recovered/common.php`).
+`sitelist.php`, `clone.php`, `shopedit.php`. Recovered bootstrap:
+`includes/common.php` (as `recovered/common.php`).
 
 Remaining goto pages:
 
 | File | goto count (approx.) |
 |---|---:|
-| `admin/shopedit.php` | 5103 |
 | `admin/set.php` | 18546 |
 
