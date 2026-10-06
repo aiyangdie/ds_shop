@@ -54,3 +54,7 @@ payload is `includes/core.func.php` and `includes/ajax.func.php` (nested-eval
 VMs; core drop-in already assembled here). Admin reconstructions are string-table forms plus fragment
 tests, not a runtime parity suite.
 
+`ajax-basic.php` begins the readable replacement for `includes/ajax.func.php`.
+It currently covers the card-input label, Qzone list wrappers, Vaptcha,
+third-party source titles, article URLs, and admin permission checks.
+
