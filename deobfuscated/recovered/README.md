@@ -49,10 +49,11 @@ Goto-flattened admin pages rewritten from decoded hex string tables:
 `includes/common.php` (as `recovered/common.php`).
 
 Goto-flattened admin pages and `includes/common.php` now have recovered copies.
-The live files stay protected until an explicit switch. Remaining protected
-payload is `includes/core.func.php` and `includes/ajax.func.php` (nested-eval
-VMs; core drop-in already assembled here). Admin reconstructions are string-table forms plus fragment
-tests, not a runtime parity suite.
+The live files stay protected until an explicit switch.
+
+`ajax.func.php` is the assembled drop-in for the 17 nested-eval ajax helpers
+(`getDatePoint` through `adminpermission`). Reconstruction is call-site plus
+fragment tests, not bytecode parity. Live `includes/ajax.func.php` stays protected.
 
 `ajax-basic.php` begins the readable replacement for `includes/ajax.func.php`.
 It currently covers the card-input label, Qzone list wrappers, Vaptcha,

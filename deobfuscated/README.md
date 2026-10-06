@@ -7,9 +7,9 @@ the scripts and manifests are the reviewable source of truth.
 ## Current findings
 
 - `includes/core.func.php` and `includes/ajax.func.php` contain the same
-  nested-eval protector (24-mode VM vs a second dispatcher). Core is recovered
-  under `recovered/core.func.php`; ajax.func.php is the remaining nested-eval
-  file.
+  nested-eval protector (24-mode VM vs a second dispatcher). Readable drop-ins
+  live under `recovered/core.func.php` and `recovered/ajax.func.php`. Live copies
+  stay protected.
 - Fifteen files used heavy `goto` flattening. Recovered copies now exist for
   all of them (`admin/*.php` listed in `recovered/README.md` plus
   `recovered/common.php`). Live copies stay protected.
