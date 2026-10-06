@@ -1,11 +1,12 @@
 <?php
 
 /**
- * Safely swap includes/core.func.php with the recovered readable core.
+ * Install or report status of recovered includes/core.func.php.
+ * Rollback is Git history, not a leftover .protected file.
  *
  * Usage:
+ *   php tools/deobfuscate/assemble_core_func.php
  *   php tools/deobfuscate/switch_recovered_core.php on
- *   php tools/deobfuscate/switch_recovered_core.php off
  *   php tools/deobfuscate/switch_recovered_core.php status
  */
 
@@ -13,61 +14,49 @@ declare(strict_types=1);
 
 $root = dirname(__DIR__, 2);
 $live = $root . '/includes/core.func.php';
-$backup = $root . '/includes/core.func.protected.php';
 $recovered = $root . '/deobfuscated/recovered/core.func.php';
-$marker = $root . '/includes/.core-recovered';
 
 $mode = isset($argv[1]) ? strtolower($argv[1]) : 'status';
 
-if (!is_file($recovered)) {
-    fwrite(STDERR, "Recovered core missing. Run assemble_core_func.php first.\n");
-    exit(1);
-}
+$isReadable = static function (string $path): bool {
+    if (!is_file($path)) {
+        return false;
+    }
+    $src = file_get_contents($path);
+    return strpos($src, 'function getSetting') !== false
+        && strpos($src, 'function processOrder') !== false
+        && !preg_match('/\bgoto\s+/', $src);
+};
 
 if ($mode === 'status') {
-    $using = is_file($marker) ? 'recovered' : 'protected';
-    echo "core.func.php mode: {$using}\n";
+    echo 'core.func.php mode: ' . ($isReadable($live) ? 'recovered' : 'unknown') . "\n";
     echo "live: {$live}\n";
-    echo "backup: " . (is_file($backup) ? $backup : '(none)') . "\n";
-    exit(0);
+    echo 'assembled recovered: ' . (is_file($recovered) ? $recovered : '(missing)') . "\n";
+    exit($isReadable($live) ? 0 : 1);
 }
 
 if ($mode === 'on') {
-    if (is_file($marker)) {
-        echo "Already using recovered core.\n";
-        exit(0);
-    }
-    if (!is_file($backup)) {
-        if (!copy($live, $backup)) {
-            fwrite(STDERR, "Failed to backup protected core.\n");
-            exit(1);
-        }
-        echo "Backed up protected core to includes/core.func.protected.php\n";
+    passthru(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(__DIR__ . '/assemble_core_func.php'), $assembleCode);
+    if ($assembleCode !== 0) {
+        exit($assembleCode ?: 1);
     }
     if (!copy($recovered, $live)) {
-        fwrite(STDERR, "Failed to install recovered core.\n");
+        fwrite(STDERR, "Failed to install recovered core.func.php.\n");
         exit(1);
     }
-    file_put_contents($marker, date('c') . "\n");
+    foreach ([$root . '/includes/core.func.protected.php', $root . '/includes/.core-recovered'] as $leftover) {
+        if (is_file($leftover)) {
+            unlink($leftover);
+        }
+    }
     echo "Installed recovered core into includes/core.func.php\n";
     exit(0);
 }
 
 if ($mode === 'off') {
-    if (!is_file($backup)) {
-        fwrite(STDERR, "No protected backup found; cannot restore.\n");
-        exit(1);
-    }
-    if (!copy($backup, $live)) {
-        fwrite(STDERR, "Failed to restore protected core.\n");
-        exit(1);
-    }
-    if (is_file($marker)) {
-        unlink($marker);
-    }
-    echo "Restored protected core into includes/core.func.php\n";
-    exit(0);
+    fwrite(STDERR, "Protected copies are not kept in this tree. Restore with: git checkout -- includes/core.func.php\n");
+    exit(2);
 }
 
-fwrite(STDERR, "Usage: php switch_recovered_core.php [on|off|status]\n");
+fwrite(STDERR, "Usage: php switch_recovered_core.php [on|status]\n");
 exit(2);

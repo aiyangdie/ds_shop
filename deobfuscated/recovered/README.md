@@ -1,7 +1,9 @@
 # Recovered source
 
 Files in this directory are readable replacements reconstructed from the
-protected runtime payload. They are not loaded by the application yet.
+protected runtime payload. `tools/deobfuscate/install_recovered.php` copies
+them into `includes/` and `admin/`. Rollback is Git history; no `.protected`
+files are left in the public tree.
 
 Each function must satisfy two checks before replacing the protected core:
 
@@ -36,8 +38,8 @@ the HTML `sysmsg` page renderer (mode 16), and the admin security checklist
 
 All 24 protected core modes are now present as readable PHP in this directory.
 `core.func.php` is the assembled drop-in (see `tools/deobfuscate/assemble_core_func.php`
-and `switch_recovered_core.php`). The live `includes/core.func.php` stays protected
-until you run the switch tool.
+and `install_recovered.php`). The live `includes/core.func.php` is the readable
+assembled file.
 
 ## Recovered admin pages
 
@@ -48,11 +50,11 @@ Goto-flattened admin pages rewritten from decoded hex string tables:
 `sitelist.php`, `clone.php`, `shopedit.php`, `set.php`. Recovered bootstrap:
 `includes/common.php` (as `recovered/common.php`).
 
-Goto-flattened admin pages and `includes/common.php` now have recovered copies.
-The live files stay protected until an explicit switch.
+Goto-flattened admin pages and `includes/common.php` have recovered copies
+that are installed as the live files.
 
 `ajax.func.php` is the assembled drop-in for all 17 nested-eval ajax helpers
 (8 in `ajax-basic.php`, 9 in `ajax-rest.php`). Reconstruction uses the captured
-dispatcher string tables plus call sites. Live `includes/ajax.func.php` stays
-protected until `tools/deobfuscate/switch_recovered_ajax.php` is run.
+dispatcher string tables plus call sites. The live `includes/ajax.func.php` is
+this assembled file and must not `require` siblings under `deobfuscated/`.
 

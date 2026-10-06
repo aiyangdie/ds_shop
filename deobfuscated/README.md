@@ -6,13 +6,13 @@ the scripts and manifests are the reviewable source of truth.
 
 ## Current findings
 
-- `includes/core.func.php` and `includes/ajax.func.php` contain the same
-  nested-eval protector (24-mode VM vs a second dispatcher). Readable drop-ins
-  live under `recovered/core.func.php` and `recovered/ajax.func.php`. Live copies
-  stay protected.
-- Fifteen files used heavy `goto` flattening. Recovered copies now exist for
+- `includes/core.func.php` and `includes/ajax.func.php` were nested-eval VMs
+  (24-mode core vs 17 Ajax helpers). Readable drop-ins live under
+  `recovered/` and are now installed as the live copies via
+  `tools/deobfuscate/install_recovered.php`.
+- Fifteen files used heavy `goto` flattening. Recovered copies exist for
   all of them (`admin/*.php` listed in `recovered/README.md` plus
-  `recovered/common.php`). Live copies stay protected.
+  `recovered/common.php`) and are installed as the live admin/common files.
 - Runtime inspection in an isolated PHP server confirmed three nested eval
   layers. The innermost layer registers 24 business functions, including
   `processorder`, `changeusermoney`, `pay_api`, `third_call`, and
