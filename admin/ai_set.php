@@ -67,10 +67,12 @@ if ($islogin != 1) exit("<script>window.location.href='./login.php';</script>");
                 <label class="col-sm-2 control-label">Temperature</label>
                 <div class="col-sm-3">
                     <input type="number" step="0.1" min="0" max="2" class="form-control" name="ai_temperature" id="ai_temperature" value="0.2">
+                    <p class="help-block" style="margin-top:6px">写公告/页面 HTML 时建议 0.5～0.7，日常改订单/商品可 0.2～0.3。</p>
                 </div>
                 <label class="col-sm-2 control-label">Max Tokens</label>
                 <div class="col-sm-3">
                     <input type="number" class="form-control" name="ai_max_tokens" id="ai_max_tokens" value="4096">
+                    <p class="help-block" style="margin-top:6px">公告 HTML 较长时建议 ≥4096，过小会截断导致页面残缺。</p>
                 </div>
             </div>
             <div class="form-group">
@@ -84,7 +86,7 @@ if ($islogin != 1) exit("<script>window.location.href='./login.php';</script>");
                 <label class="col-sm-2 control-label">系统提示词</label>
                 <div class="col-sm-8">
                     <textarea class="form-control" name="ai_system_prompt" id="ai_system_prompt" rows="4" placeholder="留空使用内置提示词。可用变量 {sitename} {assistant_name}"></textarea>
-                    <p class="help-block">仅用于后台运营助手。用户端/前台可单独配置下方提示词。</p>
+                    <p class="help-block">仅用于后台运营助手。留空则用内置提示词（已含「按用户要求写公告 HTML、禁止套万能模板」规则）。自定义时也会自动附带该 HTML 写作规则。</p>
                 </div>
             </div>
             <div class="form-group">

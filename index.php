@@ -3,7 +3,19 @@ $is_defend=true;
 if (version_compare(PHP_VERSION, '5.4.0', '<')) {
     die('require PHP > 5.4 !');
 }
-if (isset($_SERVER) && $_SERVER['REQUEST_URI'] == '/favicon.ico')exit;
+if (isset($_SERVER['REQUEST_URI']) && preg_match('#/favicon\.ico(\?.*)?$#i', $_SERVER['REQUEST_URI'])) {
+    $fav = __DIR__ . '/favicon.ico';
+    if (!is_file($fav)) $fav = __DIR__ . '/assets/img/favicon.png';
+    if (!is_file($fav)) $fav = __DIR__ . '/assets/img/logo.png';
+    if (is_file($fav)) {
+        $ext = strtolower(pathinfo($fav, PATHINFO_EXTENSION));
+        $mime = ($ext === 'png') ? 'image/png' : (($ext === 'ico') ? 'image/x-icon' : 'image/jpeg');
+        header('Content-Type: ' . $mime);
+        header('Cache-Control: public, max-age=86400');
+        readfile($fav);
+    }
+    exit;
+}
 
 include("./includes/common.php");
 
@@ -35,6 +47,9 @@ if($is_fenzhan==true && file_exists(ROOT.'assets/img/logo_'.$conf['zid'].'.png')
 	$logo = 'assets/img/logo_'.$conf['zid'].'.png';
 }else{
 	$logo = 'assets/img/logo.png';
+}
+if(function_exists('site_favicon_url')){
+	$conf['default_ico_url'] = site_favicon_url();
 }
 
 if(!empty($conf['staticurl'])){

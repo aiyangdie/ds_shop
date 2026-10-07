@@ -316,6 +316,22 @@ function checkIfActive($string) {
 	}else
 		return null;
 }
+/**
+ * 后台/分站后台的目录绝对地址，避免 /admin、/user 无斜杠时相对链接跳到前台首页
+ */
+function site_section_base($section){
+	$section = trim($section, '/');
+	$path = parse_url(isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/', PHP_URL_PATH);
+	if ($path === null || $path === '') $path = '/';
+	if (preg_match('#^(.*/'.preg_quote($section, '#').')(/|$)#', $path, $m)) {
+		$p = $m[1].'/';
+	} else {
+		$p = '/'.$section.'/';
+	}
+	$scheme = (function_exists('is_https') && is_https()) ? 'https' : ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http');
+	$host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost';
+	return $scheme.'://'.$host.$p;
+}
 function checkRefererHost(){
 	if(!$_SERVER['HTTP_REFERER'])return false;
 	$url_arr = parse_url($_SERVER['HTTP_REFERER']);
@@ -323,6 +339,47 @@ function checkRefererHost(){
 	if(strpos($http_host,':'))$http_host = substr($http_host, 0, strpos($http_host, ':'));
 	return $url_arr['host'] === $http_host;
 }
+/**
+ * 站点 Favicon 相对路径（相对网站根）
+ */
+function site_favicon_url(){
+	global $conf;
+	if(!empty($conf['default_ico_url'])){
+		$u = $conf['default_ico_url'];
+		if(strpos($u, 'http://')===0 || strpos($u, 'https://')===0 || strpos($u, '//')===0){
+			return $u;
+		}
+		$local = ROOT . ltrim(str_replace('\\','/',$u), '/');
+		if(is_file($local)) return $u;
+	}
+	if(!empty($conf['favicon'])){
+		$u = $conf['favicon'];
+		$local = ROOT . ltrim(str_replace('\\','/',$u), '/');
+		if(is_file($local)) return $u;
+	}
+	if(is_file(ROOT.'assets/img/favicon.png')) return 'assets/img/favicon.png';
+	if(is_file(ROOT.'favicon.ico')) return 'favicon.ico';
+	if(is_file(ROOT.'assets/img/logo.png')) return 'assets/img/logo.png';
+	return 'favicon.ico';
+}
+
+/**
+ * 输出 &lt;link rel="icon"&gt;，可选缓存破除参数
+ */
+function echo_site_favicon_link($base=''){
+	if(!defined('ROOT') || !function_exists('site_favicon_url')) return;
+	$url = site_favicon_url();
+	if($url==='' || $url===null) return;
+	if(strpos($url, 'http://')!==0 && strpos($url, 'https://')!==0 && strpos($url, '//')!==0){
+		$abs = ROOT . ltrim(str_replace('\\','/',$url), '/');
+		$ver = is_file($abs) ? ('?v='.filemtime($abs)) : '';
+		$url = ($base!=='' ? rtrim($base,'/').'/' : '') . ltrim($url,'/') . $ver;
+	}
+	$href = htmlspecialchars($url, ENT_QUOTES, 'UTF-8');
+	echo '<link rel="shortcut icon" href="'.$href.'">'."\n";
+	echo '<link rel="icon" href="'.$href.'">'."\n";
+}
+
 /**
  * 安全上传图片并统一保存为 PNG，返回提示文案
  */

@@ -44,6 +44,7 @@ $class_show_num = intval($conf['index_class_num_style'])?intval($conf['index_cla
     <title><?php echo $hometitle?></title>
     <meta name="keywords" content="<?php echo $conf['keywords'] ?>">
     <meta name="description" content="<?php echo $conf['description'] ?>">
+    <?php if(function_exists('echo_site_favicon_link')) echo_site_favicon_link($cdnserver); ?>
     <link rel="stylesheet" type="text/css" href="<?php echo $cdnserver; ?>assets/store/css/foxui.css">
     <link rel="stylesheet" type="text/css" href="<?php echo $cdnserver; ?>assets/store/css/foxui.diy.css">
     <link rel="stylesheet" type="text/css" href="<?php echo $cdnserver; ?>assets/store/css/style.css">

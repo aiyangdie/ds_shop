@@ -22,11 +22,11 @@ if(isset($_POST['user']) && isset($_POST['pass'])){
 		unset($_SESSION['vc_code']);
 		$session=md5($user.$pass.$password_hash);
 		$token=authcode("0\t{$user}\t{$session}", 'ENCODE', SYS_KEY);
-		setcookie("admin_token", $token, time() + 604800);
+		setcookie("admin_token", $token, time() + 604800, '/', '', false, true);
 		saveSetting('adminlogin',$date);
 		log_result('后台登录', 'IP:'.$clientip, null, 1);
 		@header('Content-Type: text/html; charset=UTF-8');
-		exit("<script language='javascript'>alert('登陆管理中心成功！');window.location.href='./';</script>");
+		exit("<script language='javascript'>window.location.href='./';</script>");
 	}else {
 		$userrow=$DB->getRow("SELECT * FROM pre_account WHERE username='$user' limit 1");
 		if($userrow && $user===$userrow['username'] && $pass===$userrow['password']) {
@@ -37,11 +37,11 @@ if(isset($_POST['user']) && isset($_POST['pass'])){
 			unset($_SESSION['vc_code']);
 			$session=md5($user.$pass.$password_hash);
 			$token=authcode("1\t{$userrow['id']}\t{$session}", 'ENCODE', SYS_KEY);
-			setcookie("admin_token", $token, time() + 604800);
+			setcookie("admin_token", $token, time() + 604800, '/', '', false, true);
 			$DB->exec("update pre_account set lasttime='$date' where id='{$userrow['id']}'");
 			log_result('后台登录', 'User:'.$user.' IP:'.$clientip, null, 1);
 			@header('Content-Type: text/html; charset=UTF-8');
-			exit("<script language='javascript'>alert('登陆管理中心成功！');window.location.href='./';</script>");
+			exit("<script language='javascript'>window.location.href='./';</script>");
 		}
 		unset($_SESSION['vc_code']);
 		@header('Content-Type: text/html; charset=UTF-8');
@@ -73,7 +73,7 @@ if(isset($_POST['user']) && isset($_POST['pass'])){
 			unset($_SESSION['thirdlogin_uin']);
 			$session=md5($conf['admin_user'].$conf['admin_pwd'].$password_hash);
 			$token=authcode("0\t{$conf['admin_user']}\t{$session}", 'ENCODE', SYS_KEY);
-			setcookie("admin_token", $token, time() + 604800);
+			setcookie("admin_token", $token, time() + 604800, '/', '', false, true);
 			saveSetting('adminlogin',$date);
 			log_result('后台登录', 'IP:'.$clientip, null, 1);
 			exit('{"code":1,"msg":"登陆管理中心成功！","url":"./"}');
@@ -82,13 +82,15 @@ if(isset($_POST['user']) && isset($_POST['pass'])){
 		}
 	}
 }elseif(isset($_GET['logout'])){
-	if(!checkRefererHost())exit();
+	// 清理新旧两种 path / HttpOnly 组合的登录 cookie
+	setcookie("admin_token", "", time() - 604800, '/', '', false, true);
+	setcookie("admin_token", "", time() - 604800, '/');
 	setcookie("admin_token", "", time() - 604800);
 	@header('Content-Type: text/html; charset=UTF-8');
-	exit("<script language='javascript'>alert('您已成功注销本次登陆！');window.location.href='./login.php';</script>");
+	exit("<script language='javascript'>window.location.href='./login.php';</script>");
 }elseif($islogin==1){
 	@header('Content-Type: text/html; charset=UTF-8');
-	exit("<script language='javascript'>alert('您已登陆！');window.location.href='./';</script>");
+	exit("<script language='javascript'>window.location.href='./';</script>");
 }
 $title='用户登录';
 include './head.php';

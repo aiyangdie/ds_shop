@@ -6,6 +6,7 @@
   <title><?php echo $hometitle?></title>
   <meta name="keywords" content="<?php echo $conf['keywords']?>">
   <meta name="description" content="<?php echo $conf['description']?>">
+  <?php if(function_exists('echo_site_favicon_link')) echo_site_favicon_link($cdnserver); ?>
   <link href="<?php echo $cdnpublic?>font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"/>
   <link type="text/css" href="<?php echo $cdnserver?>assets/css/argon.css" rel="stylesheet">
   <link type="text/css" href="<?php echo $cdnserver?>assets/css/argon2.css" rel="stylesheet">

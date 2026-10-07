@@ -22,13 +22,11 @@ if ($row = $DB->getRow("SELECT * FROM pre_qiandao WHERE zid='{$userrow['zid']}' 
 	$isqiandao = false;
 }
 
-$rs=$DB->query("SELECT * FROM pre_qiandao ORDER BY id DESC LIMIT 10");
+$rs=$DB->query("SELECT * FROM pre_qiandao ORDER BY id DESC LIMIT 12");
 $qqrow=array();
 $qdrow=array();
 while($res = $rs->fetch()){
-	if(count($qqrow)<5){
-		$qqrow[]=$res['qq'];
-	}
+	$qqrow[] = isset($res['qq']) ? $res['qq'] : '';
 	$qdrow[]=$res;
 }
 
@@ -46,7 +44,8 @@ if($conf['fanghong_api']>0){
 }
 ?>
 <style>
-.img-circle{width: 15%!important;}
+.avatar-group{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:8px;padding:6px 4px;}
+.avatar-group img.img-circle{width:36px!important;height:36px;padding:2px;margin:0;object-fit:cover;}
 </style>
 <div class="wrapper">
 <div class="col-sm-12 col-md-8 col-lg-6 center-block" style="float: none;">
@@ -81,7 +80,7 @@ if($conf['fanghong_api']>0){
 					<div class="avatar-group">
 <?php
 foreach($qqrow as $row){
-	echo $row?'<img src="http://q4.qlogo.cn/headimg_dl?dst_uin='.$row.'&spec=100" class="img-rounded img-circle img-thumbnail">':'<img src="../assets/img/user.png" class="img-rounded img-circle img-thumbnail">';
+	echo $row?'<img src="//q4.qlogo.cn/headimg_dl?dst_uin='.$row.'&spec=40" class="img-rounded img-circle img-thumbnail" alt="">':'<img src="../assets/img/user.png" class="img-rounded img-circle img-thumbnail" alt="">';
 }
 ?>
 					</div>

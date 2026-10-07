@@ -30,6 +30,7 @@ if($template_route){
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title><?php echo $title ?></title>
+  <?php if(function_exists('echo_site_favicon_link')) echo_site_favicon_link($cdnserver); ?>
   <link href="<?php echo $cdnpublic?>twitter-bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet"/>
   <link href="<?php echo $cdnpublic?>font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"/>
   <link rel="stylesheet" href="<?php echo $cdnserver?>assets/simple/css/plugins.css">

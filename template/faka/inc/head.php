@@ -10,6 +10,7 @@ if(!defined('IN_CRONLITE'))exit();
 	<title><?php echo $hometitle?></title>
 	<meta name="keywords" content="<?php echo $conf['keywords']?>">
 	<meta name="description" content="<?php echo $conf['description']?>">
+	<?php if(function_exists('echo_site_favicon_link')) echo_site_favicon_link($cdnserver); ?>
 	<link rel="stylesheet" href="<?php echo $cdnserver?>assets/faka/css/css<?php echo $conf['template_style']?$conf['template_style']:7?>.css"/>
 	<link rel="stylesheet" href="<?php echo $cdnpublic?>Buttons/2.0.0/css/buttons.min.css" />
 <style>

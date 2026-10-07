@@ -45,8 +45,10 @@ if($newuserhead){
 <head>
   <meta charset="utf-8" />
   <title><?php echo $title ?></title>
+  <base href="<?php echo htmlspecialchars(function_exists('site_section_base') ? site_section_base('user') : '/user/'); ?>">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <?php if(function_exists('echo_site_favicon_link')) echo_site_favicon_link($cdnserver); ?>
   <link href="<?php echo $cdnpublic?>twitter-bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet"/>
   <link href="<?php echo $cdnpublic?>font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"/>
   <link rel="stylesheet" href="<?php echo $cdnserver?>assets/user/css/animate.css" type="text/css" />
@@ -265,6 +267,11 @@ if($userrow['status']==0){
                   <li class="<?php echo checkIfActive('site')?>">
                     <a href="./uset.php?mod=site">
                       <span>网站信息设置</span>
+                    </a>
+                  </li>
+                  <li class="<?php echo checkIfActive('binddomain')?>">
+                    <a href="./binddomain.php">
+                      <span>我的站点域名</span>
                     </a>
                   </li>
 				  <?php if($conf['fenzhan_edithtml']==1){?>

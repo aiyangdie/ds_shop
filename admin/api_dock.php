@@ -62,6 +62,12 @@ if (isset($_POST['action'])) {
             <div class="alert alert-<?php echo $msgType ?>"><?php echo htmlspecialchars($msg) ?></div>
         <?php } ?>
 
+        <div class="alert alert-info" style="margin-bottom:15px">
+            协议规范与自建资源站说明已单独分类：
+            <a href="./supplier_api.php"><b>资源站协议</b></a>
+            （完整文档 <code>supplier/API.md</code>）
+        </div>
+
         <div class="panel panel-default">
             <div class="panel-heading"><b>当前对接站点</b></div>
             <div class="panel-body">
@@ -90,7 +96,11 @@ if (isset($_POST['action'])) {
                     <input type="number" name="goods_id" value="1001" class="form-control" style="width:100px">
                     <button type="submit" class="btn btn-success">真实 HTTP 下单测试</button>
                 </form>
-                <p class="help-block" style="margin-top:10px">下单测试会真正请求货源 API 并扣减货源库存，请看下方日志确认。</p>
+                <p class="help-block" style="margin-top:10px">
+                    下单会真实调用资源站服务引擎并交付结果（如体检报告/兑换码）。建议 tid：
+                    <code>1001</code> 体检、<code>1002</code> 文本、<code>1004</code> 兑换码；
+                    <code>1003</code> AI文案需已配置主站或资源站 AI Key。
+                </p>
             </div>
         </div>
 

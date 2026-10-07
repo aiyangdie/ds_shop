@@ -26,6 +26,8 @@ if($admin_cdnpublic==1){
     <meta name="force-rendering" content="webkit"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title><?php echo $title ?></title>
+    <base href="<?php echo htmlspecialchars(function_exists('site_section_base') ? site_section_base('admin') : '/admin/'); ?>">
+    <?php if(function_exists('echo_site_favicon_link')) echo_site_favicon_link('../'); ?>
     <link href="../assets/vendor/bootstrap.min.css" rel="stylesheet"/>
     <link href="<?php echo $cdnpublic ?>font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"/>
     <link rel="stylesheet" href="../assets/appui/css/main.css">
@@ -423,11 +425,16 @@ if($admin_cdnpublic==1){
                             </ul>
                         </li>
 
-                        <li class="<?php echo checkIfActive('shequlist,pricejk,log,clone,cloneset,shequ,orderjk,batchgoods,api_dock') ?>">
+                        <li class="<?php echo checkIfActive('shequlist,pricejk,log,clone,cloneset,shequ,orderjk,batchgoods,api_dock,supplier_api') ?>">
                             <a href="javascript:void(0)" class="sidebar-nav-menu"><i
                                         class="fa fa-chevron-left sidebar-nav-indicator sidebar-nav-mini-hide"></i><i
                                         class="fa fa-cubes sidebar-nav-icon"></i><span class="sidebar-nav-mini-hide">对接设置</span></a>
                             <ul>
+                                <li>
+                                    <a class="<?php echo checkIfActive("supplier_api") ?>" href="./supplier_api.php">
+                                        资源站协议
+                                    </a>
+                                </li>
                                 <li>
                                     <a class="<?php echo checkIfActive("api_dock") ?>" href="./api_dock.php">
                                         货源API对接
@@ -466,7 +473,7 @@ if($admin_cdnpublic==1){
                             </ul>
                         </li>
 
-                        <li class="<?php echo checkIfActive('site,gonggao,mail,pay,template,template2,upimg,upbgimg,clean,cleanbom,defend,proxy,copygg,mailtest,epay,captcha,fenzhan,cron,oauth') ?>">
+                        <li class="<?php echo checkIfActive('site,gonggao,mail,pay,template,template2,upimg,upbgimg,icon_set,clean,cleanbom,defend,proxy,copygg,mailtest,epay,captcha,fenzhan,cron,oauth,domain_guide') ?>">
                             <a href="javascript:void(0)" class="sidebar-nav-menu"><i
                                         class="fa fa-chevron-left sidebar-nav-indicator sidebar-nav-mini-hide"></i><i
                                         class="fa fa-cog sidebar-nav-icon"></i><span
@@ -480,6 +487,11 @@ if($admin_cdnpublic==1){
                                 <li>
                                     <a class="<?php echo checkIfActive("fenzhan") ?>" href="./set.php?mod=fenzhan">
                                         分站相关配置
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="<?php echo checkIfActive("domain_guide") ?>" href="./domain_guide.php">
+                                        分站域名说明
                                     </a>
                                 </li>
                                 <li>
@@ -512,6 +524,11 @@ if($admin_cdnpublic==1){
                                 <li>
                                     <a class="<?php echo checkIfActive("captcha") ?>" href="./set.php?mod=captcha">
                                         验证与IP配置
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="<?php echo checkIfActive("icon_set") ?>" href="./icon_set.php">
+                                        图标设置
                                     </a>
                                 </li>
                                 <li>

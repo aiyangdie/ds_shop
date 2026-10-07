@@ -2,13 +2,58 @@
 if(!defined('IN_CRONLITE'))exit();
 $classhide = explode(',',$siterow['class']);
 ?>
+<style>
+.shop-product-main-image{
+	display:block;width:100%;max-width:340px;height:auto;aspect-ratio:16/9;margin:0 auto;
+	object-fit:contain;border-radius:12px;border:1px solid #edf0f5;
+	box-shadow:0 8px 22px rgba(31,45,61,.10);background:#f7f8fa;
+}
+.shop-category-grid{margin-left:-7px!important;margin-right:-7px!important}
+.shop-category-grid>[class*="col-"]{padding-left:7px!important;padding-right:7px!important;margin-bottom:14px}
+.shop-category-card{
+	display:block;margin:0!important;padding:8px;background:#fff;border:1px solid #edf0f4;
+	border-radius:18px;overflow:hidden;text-decoration:none!important;color:#334155!important;
+	box-shadow:0 5px 18px rgba(31,45,61,.06);cursor:pointer;
+	transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;
+}
+.shop-category-card:hover,.shop-category-card:focus{
+	transform:translateY(-3px);border-color:#b9e8ef;box-shadow:0 12px 28px rgba(22,164,180,.14);outline:0;
+}
+.shop-category-card:active{transform:scale(.985)}
+.shop-category-card .category-cover{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:14px;background:#f6f8fb}
+.shop-category-card .widget-content{padding:9px 2px 1px!important}
+.shop-category-card .category-title{display:block;font-size:16px;line-height:22px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.shop-category-card .category-count{margin:2px 0 9px!important;color:#a0aaba!important;font-size:13px;line-height:18px}
+#goodType .shop-category-card .widget-content>.shop-category-action{
+	display:flex!important;align-items:center;justify-content:center;gap:6px;width:100%;height:36px!important;
+	border-radius:12px;background:linear-gradient(135deg,#16b8c8,#08a9bb);color:#fff;
+	font-size:14px;font-weight:600;box-shadow:0 5px 12px rgba(8,169,187,.18);
+}
+.shop-category-card:hover .shop-category-action{background:linear-gradient(135deg,#0eafc0,#0799ac)}
+@media (max-width:480px){
+	#productImagePanel{margin-bottom:12px!important}
+	#productImagePanel h3{font-size:22px}
+	.shop-product-main-image{max-width:290px;max-height:170px;border-radius:10px;box-shadow:0 5px 16px rgba(31,45,61,.08)}
+	#productThumbs{gap:6px!important;margin-top:10px!important;flex-wrap:nowrap!important;overflow-x:auto;justify-content:flex-start!important;padding:0 4px 3px;scrollbar-width:none}
+	#productThumbs::-webkit-scrollbar{display:none}
+	#productThumbs .product-thumb{width:54px!important;height:54px!important;min-width:54px;border-radius:9px!important}
+	.shop-category-grid{margin-left:-5px!important;margin-right:-5px!important}
+	.shop-category-grid>[class*="col-"]{padding-left:5px!important;padding-right:5px!important;margin-bottom:10px}
+	.shop-category-card{padding:6px;border-radius:16px;box-shadow:0 4px 14px rgba(31,45,61,.05)}
+	.shop-category-card .category-cover{border-radius:13px}
+	.shop-category-card .widget-content{padding-top:7px!important}
+	.shop-category-card .category-title{font-size:15px;line-height:20px}
+	.shop-category-card .category-count{margin-bottom:7px!important;font-size:12px}
+	#goodType .shop-category-card .widget-content>.shop-category-action{height:34px!important;border-radius:11px;font-size:13px;box-shadow:none}
+}
+</style>
 <?php
 if($conf['ui_shop']>0){
 //分类图片宫格
 ?>
 	<div id="goodType" <?php if(isset($_GET['cid'])){?>style="display: none"<?php }?>>
 <?php if($conf['ui_shop']==1){?>
-	<div class="row">
+	<div class="row shop-category-grid">
 <?php
 $rs=$DB->query("select * from pre_class where active=1 order by sort asc");
 while($row = $rs->fetch()){
@@ -22,12 +67,12 @@ while($row = $rs->fetch()){
 	$count=$DB->getColumn("SELECT count(*) from pre_tools where cid={$row['cid']} and active=1");
 ?>
 		<div class="col-lg-4 col-xs-6">
-			<a class="widget animation-fadeInQuick goodTypeChange onclick" data-id="<?php echo $row["cid"]?>">
-				<img class="lazy" width="100%" data-original="<?php echo $productimg?>">
+			<a class="widget animation-fadeInQuick goodTypeChange onclick shop-category-card" data-id="<?php echo $row["cid"]?>" role="button" tabindex="0" aria-label="进入<?php echo htmlspecialchars($row["name"], ENT_QUOTES, 'UTF-8')?>分类">
+				<img class="lazy category-cover" data-original="<?php echo $productimg?>" alt="<?php echo htmlspecialchars($row["name"], ENT_QUOTES, 'UTF-8')?>">
 				<div class="widget-content text-center">
-					<strong><?php echo $row["name"]?></strong>
-					<p class="text-muted" style="margin-bottom:10px;text-align:center;">分类<?php echo $count?>个商品</p>
-					<button type="button" data-id="<?php echo $row["cid"]?>" class="btn btn-rounded btn-info btn-block goodTypeChange">点击进入</button>
+					<strong class="category-title"><?php echo $row["name"]?></strong>
+					<p class="text-muted category-count">分类<?php echo $count?>个商品</p>
+					<span class="shop-category-action">进入选购 <i class="fa fa-angle-right" aria-hidden="true"></i></span>
 				</div>
 			</a>
 		</div>
@@ -60,7 +105,7 @@ while($row = $rs->fetch()){
 					<span class="text-muted">分类<?php echo $count?>个商品</span>
                 </td>
                 <td class="text-right">
-                    <button type="button" data-id="<?php echo $row["cid"]?>" class="btn btn-rounded btn-info goodTypeChange">点击进入</button>
+                    <span class="btn btn-rounded btn-info">进入选购 <i class="fa fa-angle-right"></i></span>
                 </td>
             </tr>
 <?php
@@ -87,7 +132,7 @@ while($row = $rs->fetch()){
 			<center style="margin-top:0;">
 				<img class="lazy" data-original="<?php echo $productimg?>" style="height: 88px;">
 				<strong style="white-space:nowrap"><?php echo $row["name"]?></strong>
-				<span type="button" data-id="<?php echo $row["cid"]?>" class="btn btn-sm btn-info btn-block goodTypeChange">点击进入</span>
+				<span class="btn btn-sm btn-info btn-block">进入选购 <i class="fa fa-angle-right"></i></span>
 			</center>
 			</a>
 		</div>
@@ -100,7 +145,7 @@ while($row = $rs->fetch()){
 		<div id="productImagePanel" style="text-align:center;margin-bottom:18px;">
 			<h3 style="margin:0 0 6px"><span id="className"></span></h3>
 			<p id="productNameTip" class="text-muted" style="margin:0 0 12px;font-size:13px;">请选择商品查看图片</p>
-			<img src="assets/img/Product/noimg.png" id="classImg" data-category-image="assets/img/Product/noimg.png" alt="商品图片" style="width:100%;max-width:360px;height:210px;object-fit:cover;border-radius:14px;border:1px solid #edf0f5;box-shadow:0 10px 28px rgba(31,45,61,.12);background:#f7f8fa;">
+			<img src="assets/img/Product/noimg.png" id="classImg" class="shop-product-main-image" data-category-image="assets/img/Product/noimg.png" alt="商品图片" decoding="async">
 			<div id="productThumbs" style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:14px;"></div>
 		</div>
 		<input type="hidden" name="cid" id="cid" value="0"/>
@@ -157,7 +202,7 @@ else $hideclass = false;
 		<div id="goodTypeContents">
 			<?php echo $conf['alert']?>
 			<div id="productImagePanel" style="text-align:center;margin-bottom:14px;">
-				<img src="assets/img/Product/noimg.png" id="classImg" data-category-image="assets/img/Product/noimg.png" alt="商品图片" style="width:100%;max-width:320px;height:180px;object-fit:cover;border-radius:12px;border:1px solid #edf0f5;background:#f7f8fa;">
+				<img src="assets/img/Product/noimg.png" id="classImg" class="shop-product-main-image" data-category-image="assets/img/Product/noimg.png" alt="商品图片" decoding="async">
 				<div id="productThumbs" style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:10px;"></div>
 			</div>
 			<?php if($conf['search_open']==1){?>

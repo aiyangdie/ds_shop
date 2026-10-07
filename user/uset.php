@@ -222,13 +222,14 @@ if($mod=='user_n'){
 	  </select>
 	</div>
 	<?php }?>
-	<?php if($conf['fenzhan_editd']>0){?>
 	<div class="form-group">
-	  <label>本站域名</label><br>
+	  <label>店铺域名</label><br>
 	  <div class="input-group">
-	  	<input type="text" name="domain" value="<?php echo $userrow['domain']; ?>" class="form-control" disabled/><div class="input-group-addon"><a href="cdomain.php">自助更换域名</a></div></div>
+	  	<input type="text" class="form-control" value="<?php echo $userrow['domain']; ?>" disabled/>
+		<div class="input-group-addon"><a href="binddomain.php">查看 / 复制</a></div>
+	  </div>
+	  <pre>平台已分配，不用自己解析。要换前缀或绑自己的域名，点右侧进入。</pre>
 	</div>
-	<?php }?>
 	<div class="form-group">
 	  <label>APP下载地址</label><br>
 	  <input type="text" name="appurl" value="<?php echo $userrow['appurl']; ?>" class="form-control" placeholder="没有请留空"/>

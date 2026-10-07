@@ -13,7 +13,7 @@ case 'getcount':
 	$isUpdate = false;
 	if (!empty($result)) {
 		$result = unserialize($result);
-		if ((time() - $result['time']) > 60)
+		if ((time() - $result['time']) > 60 || empty($result['data']['count18']))
 			$isUpdate = true;
 		else
 			$result = $result['data'];
@@ -23,19 +23,21 @@ case 'getcount':
 	if($isUpdate){
 		$thtime=date("Y-m-d").' 00:00:00';
 		$yesterday_time = date("Y-m-d",strtotime("-1 day")).' 00:00:00';
-		$count1=$DB->getColumn("SELECT count(*) FROM pre_orders");
-		$count2=$DB->getColumn("SELECT count(*) FROM pre_orders WHERE status=1");
-		$count3=$DB->getColumn("SELECT count(*) FROM pre_orders WHERE status=0");
-		$count4=$DB->getColumn("SELECT count(*) FROM pre_orders WHERE addtime>='$thtime'");
+		$count1=intval($DB->getColumn("SELECT count(*) FROM pre_orders"));
+		$count2=intval($DB->getColumn("SELECT count(*) FROM pre_orders WHERE status=1"));
+		$count3=intval($DB->getColumn("SELECT count(*) FROM pre_orders WHERE status=0"));
+		$count4=intval($DB->getColumn("SELECT count(*) FROM pre_orders WHERE addtime>='$thtime'"));
 		$count5=$DB->getColumn("SELECT sum(money) FROM pre_pay WHERE `type` IN ('qqpay','wxpay','alipay') AND addtime>='$thtime' AND status=1");
 
 		$strtotime=strtotime($conf['build']);//获取开始统计的日期的时间戳
 		$now=time();//当前的时间戳
 		$yxts=ceil(($now-$strtotime)/86400);//取相差值然后除于24小时(86400秒)
 
-		$count6=$DB->getColumn("SELECT count(*) FROM pre_site");
-		$count7=$DB->getColumn("SELECT count(*) FROM pre_site WHERE addtime>='$thtime'");
+		$count6=intval($DB->getColumn("SELECT count(*) FROM pre_site"));
+		$count7=intval($DB->getColumn("SELECT count(*) FROM pre_site WHERE addtime>='$thtime'"));
 		$count8=$DB->getColumn("SELECT sum(point) FROM pre_points WHERE action='提成' and addtime>='$thtime'");
+		$count9=0;
+		$count10=0;
 
 		$count11=$DB->getColumn("SELECT sum(realmoney) FROM `pre_tixian` WHERE `status` = 0");
 
@@ -46,6 +48,8 @@ case 'getcount':
 		//今日收益
 		$id1 = $DB->getColumn("SELECT id FROM pre_orders WHERE `addtime`<'$thtime' ORDER BY id DESC LIMIT 1");
 		$id2 = $DB->getColumn("SELECT id FROM pre_orders WHERE `addtime`<'$yesterday_time' ORDER BY id DESC LIMIT 1");
+		$id1 = $id1 ? intval($id1) : 0;
+		$id2 = $id2 ? intval($id2) : 0;
 		$sql="select money,cost from pre_orders where (status = 1 or status = 2) and id > '$id1'";
 		$today_list = $DB->getAll($sql);
 		$today_total_money = 0;
@@ -61,9 +65,33 @@ case 'getcount':
 			$yesterday_total_money += ($v['money'] - $v['cost']);
 		}
 
-		$count17=$DB->getColumn("SELECT count(*) FROM pre_workorder where status=0 or status=1");
+		$count17=intval($DB->getColumn("SELECT count(*) FROM pre_workorder where status=0 or status=1"));
+		// 扩展统计：异常/处理中/退单、商品、提现笔数、工单细分、今日支付笔数
+		$count18=intval($DB->getColumn("SELECT count(*) FROM pre_orders WHERE status=3"));
+		$count19=intval($DB->getColumn("SELECT count(*) FROM pre_orders WHERE status=2"));
+		$count20=intval($DB->getColumn("SELECT count(*) FROM pre_orders WHERE status=4"));
+		$count21=intval($DB->getColumn("SELECT count(*) FROM pre_tools"));
+		$count22=intval($DB->getColumn("SELECT count(*) FROM pre_tools WHERE close=1"));
+		$count23=intval($DB->getColumn("SELECT count(*) FROM pre_class WHERE active=1"));
+		$count24=intval($DB->getColumn("SELECT count(*) FROM pre_workorder WHERE status=0"));
+		$count25=intval($DB->getColumn("SELECT count(*) FROM pre_workorder WHERE status=1"));
+		$count26=intval($DB->getColumn("SELECT count(*) FROM pre_tixian WHERE status=0"));
+		$count27=intval($DB->getColumn("SELECT count(*) FROM pre_pay WHERE addtime>='$thtime' AND status=1"));
+		$count28=intval($DB->getColumn("SELECT count(*) FROM pre_site WHERE power>0"));
 
-		$result=array("code"=>0,"yxts"=>$yxts,"count1"=>$count1,"count2"=>$count2,"count3"=>$count3,"count4"=>$count4,"count5"=>round($count5,2),"count6"=>$count6,"count7"=>$count7,"count8"=>round($count8,2),"count9"=>round($count9,2),"count10"=>round($count10,2),"count11"=>round($count11,2),"count12"=>round($count12,2),"count13"=>round($count13,2),"count14"=>round($count14,2),"count15"=>round($today_total_money,2),"count16"=>round($yesterday_total_money,2),"count17"=>$count17,"chart"=>getDatePoint());
+		$result=array(
+			"code"=>0,"yxts"=>$yxts,
+			"count1"=>$count1,"count2"=>$count2,"count3"=>$count3,"count4"=>$count4,"count5"=>round($count5?$count5:0,2),
+			"count6"=>$count6,"count7"=>$count7,"count8"=>round($count8?$count8:0,2),
+			"count9"=>round($count9,2),"count10"=>round($count10,2),
+			"count11"=>round($count11?$count11:0,2),
+			"count12"=>round($count12?$count12:0,2),"count13"=>round($count13?$count13:0,2),"count14"=>round($count14?$count14:0,2),
+			"count15"=>round($today_total_money,2),"count16"=>round($yesterday_total_money,2),"count17"=>$count17,
+			"count18"=>$count18,"count19"=>$count19,"count20"=>$count20,
+			"count21"=>$count21,"count22"=>$count22,"count23"=>$count23,
+			"count24"=>$count24,"count25"=>$count25,"count26"=>$count26,"count27"=>$count27,"count28"=>$count28,
+			"chart"=>getDatePoint()
+		);
 		$CACHE->save('getcount', serialize(['time' => time(), 'data' => $result]));
 	}
 	exit(json_encode($result));

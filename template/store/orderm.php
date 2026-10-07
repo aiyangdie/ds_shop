@@ -69,7 +69,7 @@ if(!empty($tool['blockpay'])){
     <title><?php echo '购买 [' . $row['name'] . ' ] 确认订单 - ' . $conf['sitename'].($conf['title']==''?'':' - '.$conf['title'])  ?></title>
     <meta name="keywords" content="<?php echo $conf['keywords'] ?>">
     <meta name="description" content="<?php echo $conf['description'] ?>">
-    <link rel="shortcut icon" href="<?php echo $conf['default_ico_url'] ?>">
+    <?php if(function_exists('echo_site_favicon_link')) echo_site_favicon_link(isset($cdnserver)?$cdnserver:''); else { ?><link rel="shortcut icon" href="<?php echo !empty($conf['default_ico_url'])?$conf['default_ico_url']:'assets/img/logo.png'; ?>"><?php } ?>
     <link rel="stylesheet" type="text/css" href="<?php echo $cdnpublic ?>layui/2.5.7/css/layui.css"/>
     <link href="<?php echo $cdnpublic ?>limonte-sweetalert2/7.33.1/sweetalert2.min.css" rel="stylesheet">
     <link href="<?php echo $cdnpublic ?>animate.css/3.7.2/animate.min.css" rel="stylesheet">

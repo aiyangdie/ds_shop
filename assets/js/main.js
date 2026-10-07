@@ -107,7 +107,7 @@ function renderProductThumbs(list) {
 			width:'64px',height:'64px',padding:0,border:'2px solid #e5e8ed',borderRadius:'10px',
 			overflow:'hidden',background:'#fff',cursor:'pointer'
 		});
-		$item.append($('<img>').attr('src', img).css({width:'100%',height:'100%',objectFit:'cover',display:'block'}).on('error', function(){ this.src='assets/img/Product/noimg.png'; }));
+		$item.append($('<img>').attr({src:img,loading:'lazy',decoding:'async'}).css({width:'100%',height:'100%',objectFit:'cover',display:'block'}).on('error', function(){ this.src='assets/img/Product/noimg.png'; }));
 		$item.on('click', function () {
 			$('#tid').val(String(res.tid)).trigger('change');
 		});
@@ -962,6 +962,12 @@ $('.goodTypeChange').click(function(){
 	$("#cid").change();
 	$("#goodType").hide('normal');
 	$("#goodTypeContent").show('normal');
+});
+$('.goodTypeChange[role="button"]').on('keydown', function(e){
+	if(e.keyCode === 13 || e.keyCode === 32){
+		e.preventDefault();
+		$(this).trigger('click');
+	}
 });
 $(".nav-tabs,.backType").click(function(){
 	history.replaceState({}, null, './');

@@ -9,7 +9,7 @@ if(!defined('IN_CRONLITE'))exit();
    <title><?php echo $conf['sitename']?> - <?php echo $conf['title']?></title>
   <meta name="keywords" content="<?php echo $conf['keywords']?>">
   <meta name="description" content="<?php echo $conf['description']?>">
-  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <?php if(function_exists('echo_site_favicon_link')) echo_site_favicon_link($cdnserver); else { ?><link rel="icon" href="favicon.ico" type="image/x-icon"><?php } ?>
   <link href="<?php echo $cdnpublic?>twitter-bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet"/>
   <link href="<?php echo $cdnpublic?>font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"/>
   <link href="<?php echo $cdnserver?>assets/qiuqiu/css/style.css" rel="stylesheet" type="text/css">

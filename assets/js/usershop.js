@@ -13,6 +13,44 @@ var $_GET = (function(){
         return {};
     }
 })();
+function resolveUserShopImage(url) {
+	url = url ? unescape(url) : '';
+	if (!url) return '../assets/img/Product/noimg.png';
+	if (/^(?:https?:)?\/\//i.test(url) || /^(?:data:|\/)/i.test(url)) return url;
+	return '../' + url.replace(/^\.\//, '');
+}
+function showUserShopImage(url) {
+	$('#classImg').attr('src', resolveUserShopImage(url)).off('error.userShopImage').on('error.userShopImage', function () {
+		$(this).off('error.userShopImage').attr('src', '../assets/img/Product/noimg.png');
+	});
+}
+function openUserShopImagePreview() {
+	var src = $('#classImg').attr('src');
+	if (!src) return;
+	$('#userImagePreview .user-image-preview__image').attr('src', src);
+	$('#userImagePreview').addClass('is-open').attr('aria-hidden', 'false');
+	$('body').css('overflow', 'hidden');
+}
+function closeUserShopImagePreview() {
+	$('#userImagePreview').removeClass('is-open').attr('aria-hidden', 'true');
+	$('body').css('overflow', '');
+}
+$(document).on('click', '#classImg', openUserShopImagePreview);
+$(document).on('click', '#userImagePreview, .user-image-preview__close', function (event) {
+	if (event.target === this || $(event.target).hasClass('user-image-preview__close')) closeUserShopImagePreview();
+});
+$(document).on('keydown', function (event) {
+	if (event.keyCode === 27) closeUserShopImagePreview();
+});
+$(document).on('keydown', '#classImg', function (event) {
+	if (event.keyCode === 13 || event.keyCode === 32) {
+		event.preventDefault();
+		openUserShopImagePreview();
+	}
+});
+$(function () {
+	$('#classImg').attr({tabindex: '0', role: 'button', 'aria-label': '点击查看商品大图'});
+});
 function changepwd(id,skey) {
 	pwdlayer = layer.open({
 	  type: 1,
@@ -43,6 +81,8 @@ function saveOrderPwd(id,skey) {
 }
 function getPoint() {
 	if($('#tid option:selected').val()==undefined || $('#tid option:selected').val()=="0"){
+		showUserShopImage($('#classImg').attr('data-category-image'));
+		$('#productNameTip').text('请选择商品查看图片');
 		$('#inputsname').html("");
 		$('#need').val('');
 		$('#display_price').hide();
@@ -56,6 +96,8 @@ function getPoint() {
 	var count = $('#tid option:selected').attr('count');
 	var price = $('#tid option:selected').attr('price');
 	var shopimg = $('#tid option:selected').attr('shopimg');
+	showUserShopImage(shopimg || $('#classImg').attr('data-category-image'));
+	$('#productNameTip').text($('#tid option:selected').text());
 	var close = $('#tid option:selected').attr('close');
 	$('#display_price').show();
 	if(multi==1 && count>1){
@@ -861,7 +903,7 @@ $("#doSearch").click(function () {
 			if(data.code == 0){
 				var num = 0;
 				$.each(data.data, function (i, res) {
-					$("#tid").append('<option value="'+res.tid+'" cid="'+res.cid+'" price="'+res.price+'" desc="'+escape(res.desc)+'" alert="'+escape(res.alert)+'" inputname="'+res.input+'" inputsname="'+res.inputs+'" multi="'+res.multi+'" isfaka="'+res.isfaka+'" count="'+res.value+'" close="'+res.close+'" prices="'+res.prices+'" max="'+res.max+'" min="'+res.min+'" stock="'+res.stock+'">'+res.name+'</option>');
+					$("#tid").append('<option value="'+res.tid+'" cid="'+res.cid+'" price="'+res.price+'" desc="'+escape(res.desc)+'" alert="'+escape(res.alert)+'" inputname="'+res.input+'" inputsname="'+res.inputs+'" multi="'+res.multi+'" isfaka="'+res.isfaka+'" count="'+res.value+'" close="'+res.close+'" prices="'+res.prices+'" max="'+res.max+'" min="'+res.min+'" stock="'+res.stock+'" shopimg="'+escape(res.shopimg || '')+'">'+res.name+'</option>');
 					num++;
 				});
 				$("#tid").val(0);
@@ -895,14 +937,13 @@ $("#cid").change(function () {
 			if(data.code == 0){
 				if(data.info!=null){
 					$("#className").html(data.info.name);
-					if(data.info.shopimg)
-						$("#classImg").attr('src',data.info.shopimg.indexOf("://")>0?data.info.shopimg:'../'+data.info.shopimg);
-					else
-						$("#classImg").attr('src','');
+					var categoryImage = resolveUserShopImage(data.info.shopimg);
+					$("#classImg").attr('data-category-image', categoryImage);
+					showUserShopImage(categoryImage);
 				}
 				var num = 0;
 				$.each(data.data, function (i, res) {
-					$("#tid").append('<option value="'+res.tid+'" cid="'+res.cid+'" price="'+res.price+'" desc="'+escape(res.desc)+'" alert="'+escape(res.alert)+'" inputname="'+res.input+'" inputsname="'+res.inputs+'" multi="'+res.multi+'" isfaka="'+res.isfaka+'" count="'+res.value+'" close="'+res.close+'" prices="'+res.prices+'" max="'+res.max+'" min="'+res.min+'" stock="'+res.stock+'">'+res.name+'</option>');
+					$("#tid").append('<option value="'+res.tid+'" cid="'+res.cid+'" price="'+res.price+'" desc="'+escape(res.desc)+'" alert="'+escape(res.alert)+'" inputname="'+res.input+'" inputsname="'+res.inputs+'" multi="'+res.multi+'" isfaka="'+res.isfaka+'" count="'+res.value+'" close="'+res.close+'" prices="'+res.prices+'" max="'+res.max+'" min="'+res.min+'" stock="'+res.stock+'" shopimg="'+escape(res.shopimg || '')+'">'+res.name+'</option>');
 					num++;
 				});
 				if($_GET["tid"] && $_GET["cid"]==cid){

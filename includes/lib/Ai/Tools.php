@@ -237,10 +237,10 @@ class Tools
                     'items' => array('type' => 'string'),
                 ),
             )),
-            $this->fn('update_config', '更新白名单内站点配置：网站信息/分站/公告/邮箱提醒开关/支付通道开关/模板/快捷登录开关/验证IP/代理(不含密码)/计划任务参数/签到推广抽奖等。密钥类会被拒绝', array(
+            $this->fn('update_config', '更新白名单内站点配置。公告类(anounce/modal/footer等)可直接写入完整 HTML（按用户要求排版，勿套固定模板）。密钥类会被拒绝', array(
                 'items' => array(
                     'type' => 'object',
-                    'description' => '键值对，例如 {"sitename":"新店名","fenzhan_buy":"1","alipay_api":"2"}',
+                    'description' => '键值对。示例：{"sitename":"新店名"}；公告 HTML 示例：{"anounce":"<div style=\\"padding:12px\\">...</div>"}。anounce/modal/footer/gg_search/paymsg 等按用户要求写完整 HTML，勿套固定模板',
                     'additionalProperties' => array('type' => 'string'),
                 ),
                 'confirm' => array('type' => 'boolean', 'description' => '改重要业务开关建议 true；批量改设置时传 true'),
@@ -484,16 +484,16 @@ class Tools
                 'confirm' => array('type' => 'boolean', 'description' => '必须 true'),
             ), array('id', 'confirm')),
             $this->fn('list_templates', '列出可用前台模板目录名', array()),
-            $this->fn('setup_site', '一键设置站点品牌（用户自定义站名/网名/下单平台名），含简介、客服、公告、助手称呼、前台模板等，适合初始化完善后即可使用', array(
+            $this->fn('setup_site', '设置站点品牌与展示文案。公告类字段请按用户要求写完整 HTML（可含内联样式），勿套固定通用模板；改已有公告前宜先 get_config', array(
                 'sitename' => array('type' => 'string', 'description' => '站点对外名称，完全由用户决定，如 XX下单平台 / XX网'),
                 'title' => array('type' => 'string', 'description' => '浏览器标题，可选，默认可与站名相同'),
                 'keywords' => array('type' => 'string', 'description' => 'SEO关键词'),
                 'description' => array('type' => 'string', 'description' => '站点简介'),
                 'kfqq' => array('type' => 'string', 'description' => '客服QQ'),
-                'anounce' => array('type' => 'string', 'description' => '首页公告HTML/文本'),
-                'modal' => array('type' => 'string', 'description' => '弹窗公告'),
-                'gg_search' => array('type' => 'string', 'description' => '查询页提示'),
-                'footer' => array('type' => 'string', 'description' => '底部信息'),
+                'anounce' => array('type' => 'string', 'description' => '首页公告完整 HTML。按用户风格/文案/布局来写，可内联 CSS；禁止无关万能模板；不要 script/on*'),
+                'modal' => array('type' => 'string', 'description' => '弹窗公告完整 HTML，规则同 anounce'),
+                'gg_search' => array('type' => 'string', 'description' => '查询页提示，可为 HTML'),
+                'footer' => array('type' => 'string', 'description' => '底部信息，可为 HTML'),
                 'assistant_name' => array('type' => 'string', 'description' => 'AI助手对外称呼，用户自定义'),
                 'template' => array('type' => 'string', 'description' => '前台模板目录名，先用 list_templates 查看'),
                 'confirm' => array('type' => 'boolean', 'description' => '必须 true'),
@@ -1515,9 +1515,9 @@ class Tools
             ),
             'gonggao' => array(
                 'name' => '网站公告配置',
-                'writable' => 'anounce/modal/gg_search/paymsg/footer/bottom/chatframe/gg_announce/gg_panel',
+                'writable' => 'anounce/modal/gg_search/paymsg/footer/bottom/chatframe/gg_announce/gg_panel（均可写完整HTML，按用户要求设计，先读再改）',
                 'blocked' => '无',
-                'ai' => '可用 update_config / setup_site',
+                'ai' => 'get_config 读现有 → 按用户要求写 HTML → update_config/setup_site 保存；勿套万能模板',
             ),
             'mail' => array(
                 'name' => '邮箱与提醒配置',

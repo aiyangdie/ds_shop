@@ -5,7 +5,7 @@ namespace lib;
  */
 
 class AppCreate{
-	private $apiurl = 'http://app.weishiapp.cn:982';
+	private $apiurl = '';
 	private $projectid = '3';
 	private $theme = '#00A7AA';
 	private $key;
@@ -30,6 +30,10 @@ class AppCreate{
 	//上传图片
 	public function uploadimg($path){
 		if(!$path)return false;
+		if($this->apiurl === ''){
+			$this->msg = '请先在后台填写本站APP生成接口地址';
+			return false;
+		}
 		$url = $this->apiurl.'/files?key='.$this->key;
 		$ch = curl_init();
 		$data = [];
@@ -50,13 +54,17 @@ class AppCreate{
 		}elseif(isset($arr['message'])){
 			$this->msg = $arr['message'];
 		}else{
-			$this->msg = '在线生成系统暂时维护，有问题请联系管理员！';
+			$this->msg = '本站APP生成接口无响应';
 		}
 		return false;
 	}
 
 	//提交任务
 	public function submittask($name, $appurl, $icon = "1", $background = "2", $theme = '', $nonav = 0){
+		if($this->apiurl === ''){
+			$this->msg = '请先在后台填写本站APP生成接口地址';
+			return false;
+		}
 		$url = $this->apiurl.'/tasks?key='.$this->key;
 		if(empty($theme))$theme = $this->theme;
 		if($nonav==1)$this->projectid='6';
@@ -77,13 +85,17 @@ class AppCreate{
 		}elseif(isset($arr['message'])){
 			$this->msg = $arr['message'];
 		}else{
-			$this->msg = '在线生成系统暂时维护，有问题请联系管理员！';
+			$this->msg = '本站APP生成接口无响应';
 		}
 		return false;
 	}
 
 	//查询任务进度
 	public function querytask($taskid){
+		if($this->apiurl === ''){
+			$this->msg = '请先在后台填写本站APP生成接口地址';
+			return null;
+		}
 		$url = $this->apiurl.'/tasks/query';
 		$post = [
 			'key' => $this->key,
@@ -103,13 +115,17 @@ class AppCreate{
 		}elseif(isset($arr['message'])){
 			$this->msg = $arr['message'];
 		}else{
-			$this->msg = '在线生成系统暂时维护，有问题请联系管理员！';
+			$this->msg = '本站APP生成接口无响应';
 		}
 		return null;
 	}
 
 	//根据网址查询APP
 	public function queryurl($appurl){
+		if($this->apiurl === ''){
+			$this->msg = '请先在后台填写本站APP生成接口地址';
+			return null;
+		}
 		$url = $this->apiurl.'/tasks/query';
 		$post = [
 			'key' => $this->key,
@@ -129,7 +145,7 @@ class AppCreate{
 		}elseif(isset($arr['message'])){
 			$this->msg = $arr['message'];
 		}else{
-			$this->msg = '在线生成系统暂时维护，有问题请联系管理员！';
+			$this->msg = '本站APP生成接口无响应';
 		}
 		return null;
 	}

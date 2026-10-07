@@ -3,6 +3,16 @@
 > PHP 版本：**必须 7.4**（核心含混淆代码，PHP 8.x 不可用）  
 > 本地推荐解释器：`C:\tools\php74\php.exe`
 
+**默认只开主站。** AI、资源站、APP 打包都是可选模块，不装不影响卖货。
+
+| 档位 | 要跑什么 | 适用 |
+|------|----------|------|
+| A 开店 | PHP 7.4 + MySQL + 源码安装 | 自营商品 / 发卡 / 收款 |
+| B 开店 + 货源 | A + 单独部署 `supplier/`（或本地再开 8081） | 对接/卖 API 服务 |
+| C 本地出包 | B 不需要；另装 JDK 17 + Android SDK + Gradle | 给分站打 APK |
+
+公网用 Nginx/Apache 指到站点根目录即可，不必用 `start-*.bat`（那只是本机 PHP 内置服务器）。
+
 ____
 * 去除所有授权验证
 * 支持自定义说说接口
@@ -14,7 +24,7 @@ ____
 
 ## 本仓库增强更新说明（2026-10）
 
-在原版彩虹商城基础上，本仓库已落地以下能力。部署到新环境时请一并阅读。
+下列能力**按需开启**。新环境按「档位 A」装完能开店即可，不必一次配齐。
 
 ### 1. AI 运营助手 + 前台客服浮窗
 
@@ -50,17 +60,22 @@ ____
 - Gradle → `C:\Gradle`，工作目录 → `C:\appbuild`
 - 本机路径写在 `tools/appbuild/env.local.php`（已 gitignore，勿提交）
 
-### 3. 货源 API 对接（彩虹同系统）
+### 3. 资源站协议（可对接 / 可自建）
+
+把货源能力做成**独立协议 + 可复制套件**，别人可以接你的站，也可以自己搭资源站对外供货。
 
 | 项 | 说明 |
 |------|------|
-| 本地货源 | `supplier/api.php`，独立端口 **8081** |
-| 主站插件 | `includes/plugins/third_daishua.php`（`is_curl=2`） |
-| 启动 | 主站 `start-local.bat`（8080）+ `start-supplier.bat`（8081） |
-| 注意 | **禁止**货源 URL 与主站同端口，PHP 内置服务器会自调用死锁 |
-| 演示账号 | `supplier` / `supplier123` |
-| 后台测试 | `admin/api_dock.php` |
-| 说明文档 | `supplier/README.md` |
+| 协议规范 | `supplier/API.md`（daishua / 同系统协议 v1.0） |
+| 可售服务 | `supplier/lib/Services.php`：体检 / 文本整理 / AI文案 / 兑换码 / 工单 |
+| 参考实现 | `supplier/api.php` + `config.php`（可单独部署） |
+| 搭建说明 | `supplier/README.md` |
+| 商城插件 | `includes/plugins/third_daishua.php`（商品 `is_curl=2`） |
+| 后台入口 | **对接设置 → 资源站协议**（`admin/supplier_api.php`） |
+| 连通测试 | `admin/api_dock.php` |
+| 本地联调 | 主站 `8080` + 资源站 `8081`（**必须分端口**） |
+| 演示账号 | `supplier` / `supplier123`（上线务必改密并 `allow_remote=true`） |
+| 探测接口 | `GET /api.php?act=ping` |
 
 订单关注字段：`status`、`djzt`、`djorder`（对接成功/失败/发卡等）。
 
@@ -92,7 +107,7 @@ includes/       核心库、插件、AI、Storage、AppFactory
 other/          支付目录
 install/        安装与升级 SQL
 template/       前台模板（下载页 default/app.php）
-supplier/       本地演示货源（8081）
+supplier/       资源站套件（协议 API.md + 可独立部署实现）
 tools/appshell  安卓壳模板
 tools/appbuild  本地打包 Worker
 config.php      数据库配置（不入库，需自行创建）
@@ -104,25 +119,32 @@ cron.php        定时任务
 
 ---
 
-## 安装教程
+## 安装教程（档位 A，够用）
 
-1. 上传源码到空间或服务器，确保目录可读写。  
-2. 浏览器访问 `域名/install/index.php`，按步骤安装。  
-3. 复制并填写 `config.php`（库名、账号、表前缀一般为 `shua_`）。  
-4. 如需 APP 工厂字段，执行 `install/update_appfactory.sql`（或依赖运行时自动补齐）。  
-5. 启用 AI：后台「AI模型配置」填写 Key 并开启。  
-6. 本地联调货源：同时启动 8080 与 8081，社区 URL 填 `127.0.0.1:8081`。
+1. 上传源码，目录可读写。  
+2. 浏览器打开 `域名/install/index.php`，按步骤安装。  
+3. 填写 `config.php`（库名、账号、表前缀一般为 `shua_`）。  
+4. 后台改掉默认管理员密码，配置支付。  
+
+到这里就可以卖货。下面都是可选。
+
+- **档位 B 货源：** 把 `supplier/` 单独放到一个站点，或本机再运行 `start-supplier.bat`。对接 URL 填该主机（本机为 `127.0.0.1:8081`）。详见 `supplier/README.md`。  
+- **AI：** 后台「AI模型配置」填 Key 再打开开关。  
+- **APP 工厂：** 需要时再执行 `install/update_appfactory.sql`（运行时也会补字段），并配置本机 JDK/SDK。  
 
 ### 本地快速启动（Windows）
 
+只开店：
+
 ```bat
 start-local.bat
-start-supplier.bat
-tools\appbuild\run_worker.bat
 ```
 
+要测对接时再开第二个窗口：`start-supplier.bat`  
+要打 APK 时再开：`tools\appbuild\run_worker.bat`
+
 - 主站：http://127.0.0.1:8080/  
-- 货源：http://127.0.0.1:8081/  
+- 货源（可选）：http://127.0.0.1:8081/  
 
 ---
 
@@ -146,7 +168,7 @@ tools\appbuild\run_worker.bat
 > template（模板）  
 > config.php（数据库配置文件）  
 > doc.php（对接文档）  
-> supplier（本地货源演示）  
+> supplier（资源站协议 + 可自建套件）  
 > tools（APP 壳与打包）  
 
 ---

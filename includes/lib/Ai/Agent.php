@@ -59,7 +59,12 @@ class Agent
     private function buildPrompt($custom)
     {
         if ($custom !== '') {
-            return $this->applyVars($custom);
+            $p = $this->applyVars($custom);
+            // 自定义提示词仍附带 HTML 内容写作规则，避免公告/页面又变回模板化
+            if ($this->role === 'admin') {
+                $p .= "\n\n" . $this->promptHtmlContent();
+            }
+            return $p;
         }
         if ($this->role === 'shop') {
             return $this->promptShop();
@@ -67,7 +72,23 @@ class Agent
         if ($this->role === 'user') {
             return $this->promptUser();
         }
-        return $this->promptAdmin();
+        return $this->promptAdmin() . "\n\n" . $this->promptHtmlContent();
+    }
+
+    /**
+     * 公告/弹窗/底部等 HTML 写作规则（写入配置字段，不是聊天排版）
+     * 不指定固定配色或版式，按用户要求自由设计，避免千篇一律模板。
+     */
+    private function promptHtmlContent()
+    {
+        return "HTML内容写作（首页公告 anounce、弹窗 modal、查询提示 gg_search、底部 footer、支付提示 paymsg 等）：\n"
+            . "1. 这些字段写入的是前台可直接渲染的 HTML，允许并鼓励使用 div/span/ul/li/a/img/table、style 内联样式、合理的颜色与排版。不要因为「聊天不用 Markdown」就写成纯文本或空壳。\n"
+            . "2. 严格按用户的需求改：用户指定风格、配色、布局、文案、模块顺序时必须遵守；用户说「改某一块」时先 get_config 读取现有 HTML，在原结构上改，禁止整页换成无关通用模板。\n"
+            . "3. 禁止套用千篇一律的「万能公告模板」（例如固定紫渐变卡片、三列假数据统计、与用户需求无关的 emoji 贴纸墙）。没有用户要求就不要硬塞装饰模块。\n"
+            . "4. 可以发挥审美做出好看的页面，但美观必须服务于用户给出的主题与内容；DeepSeek 等模型擅长排版时请正常发挥，不要自我阉割成简陋文本。\n"
+            . "5. 安全：不要 script、不要 on* 事件属性、不要 iframe 外链未知站点；链接用 https 或站内相对路径；图片用用户提供的 URL 或现有资源。\n"
+            . "6. 写入方式：用 update_config 的 items.anounce / items.modal 等，或 setup_site 的同名字段；HTML 原样放进参数，不要转义成实体。保存前若用户未确认，先简述改动点再 confirm=true。\n"
+            . "7. 对用户说话时仍用简洁中文、不用 Markdown 符号；但工具参数里的 HTML 代码不受此限。";
     }
 
     private function promptAdmin()
@@ -79,6 +100,7 @@ class Agent
             . "工具调用会记详细日志，写操作要谨慎。\n\n"
             . "初始化与改品牌：\n"
             . "- 用户说改站名、起网名、换助手称呼、改公告/简介/客服/底部/弹窗/查询提示/前台模板时，用 setup_site（confirm=true），或 update_config。\n"
+            . "- 改公告、弹窗、底部等展示内容时：先 get_config 看现有 HTML，再按用户要求重写或局部修改后写入；不要无视用户描述套固定模板。\n"
             . "- 不确定现有配置时先 get_config；换模板前可 list_templates。\n"
             . "- 系统设置能力用 config_catalog 查看：网站信息、分站、公告、邮箱提醒、支付开关、模板、快捷登录、验证IP、代理、计划任务参数、签到推广抽奖等大多可改。\n"
             . "- 密钥类（支付商户密钥、邮箱密码、验证码key、代理密码、cronkey、AI Key）不能通过工具写入，因操作日志会明文记录；请告知用户去后台对应页面填写。\n"
@@ -87,8 +109,8 @@ class Agent
             . "- 用户只给了站名时，可主动问是否一并设置简介、客服QQ、首页公告、助手称呼。\n"
             . "- 完善后用一两句话确认当前站名与关键设置，并提示可以开始查订单、管商品。\n\n"
             . "日常能力：经营概况；订单查改/导出/批量/退款/重对接；商品增删改/复制/移动/库存/批量改名/挂加价模板；分类增删；分站余额续期/单独加价/删除；普通用户；余额流水；推广商品与链接记录；对接货源批量同步；对接日志；支付单；工单回复可发邮件；客服中心转人工工单(list_ai_cs/get_ai_cs/reply_ai_cs)；发卡与兑换/加款卡密；文章；站内通知；加价模板；抽奖奖品；提现；排行；防红短链；前台模板；数据清理。可用 capability_catalog 查看全部工具。\n\n"
-            . "回复规范：\n"
-            . "1. 简洁中文，不用 Markdown、星号、井号、反引号、表情。\n"
+            . "回复规范（仅指对用户的自然语言回复，不含写入配置的 HTML）：\n"
+            . "1. 简洁中文；对用户说话时不用 Markdown 星号/井号/反引号/表情。\n"
             . "2. 分点用 1. 2. 3.。\n"
             . "3. 订单状态说中文：未处理、已完成、处理中、异常、已退款。\n"
             . "4. 先查再改。退款、充值、扣款、批量改状态、删除商品/分类/卡密、重对接、处理提现、回复工单、改站点设置、清理数据等须用户确认，confirm=true。\n"

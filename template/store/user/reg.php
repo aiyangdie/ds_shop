@@ -15,7 +15,7 @@ list($background_image, $background_css) = \lib\Template::getBackground();
     <title>注册账号 - <?php echo $conf['sitename'];  ?></title>
     <meta name="keywords" content="<?php echo $conf['keywords'] ?>">
     <meta name="description" content="<?php echo $conf['description'] ?>">
-    <link rel="shortcut icon" href="<?php echo $conf['default_ico_url'] ?>">
+    <?php if(function_exists('echo_site_favicon_link')) echo_site_favicon_link(isset($cdnserver)?$cdnserver:''); else { ?><link rel="shortcut icon" href="<?php echo !empty($conf['default_ico_url'])?$conf['default_ico_url']:'assets/img/logo.png'; ?>"><?php } ?>
     <link href="<?php echo $cdnpublic?>twitter-bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet"/>
     <link rel="stylesheet" type="text/css" href="<?php echo $cdnserver; ?>assets/store/css/foxui.css">
     <link rel="stylesheet" type="text/css" href="<?php echo $cdnserver; ?>assets/store/css/style.css">

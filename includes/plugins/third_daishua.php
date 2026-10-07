@@ -71,9 +71,9 @@ class third_daishua{
 	public function goods_list(){
 		$url = '/api.php?act=goodslist';
 		$post = 'user='.urlencode($this->config['username']).'&pass='.urlencode($this->config['password']);
-		$ret = $this->get_curl($url, $post);
-		if (!$ret = json_decode($ret, true)) {
-			return '打开对接网站失败';
+		$data = $this->get_curl($url, $post);
+		if (!$ret = json_decode($data, true)) {
+			return $this->fail_open($data);
 		} elseif ($ret['code'] != 0) {
 			return $ret['message'];
 		} else {
@@ -99,7 +99,7 @@ class third_daishua{
 		$post = 'tid='.$goods_id.'&user='.urlencode($this->config['username']).'&pass='.urlencode($this->config['password']);
 		$data = $this->get_curl($url, $post);
 		if (!$ret = json_decode($data, true)) {
-			return '打开对接网站失败';
+			return $this->fail_open($data);
 		} elseif ($ret['code'] != 0) {
 			return $ret['message'];
 		} else {
@@ -129,9 +129,9 @@ class third_daishua{
 	public function class_list(){
 		$url = '/api.php?act=classlist';
 		$post = 'user='.urlencode($this->config['username']).'&pass='.urlencode($this->config['password']);
-		$ret = $this->get_curl($url, $post);
-		if (!$ret = json_decode($ret, true)) {
-			return '打开对接网站失败';
+		$data = $this->get_curl($url, $post);
+		if (!$ret = json_decode($data, true)) {
+			return $this->fail_open($data);
 		}  elseif ($ret['code'] == -5) {
 			return '对方网站未更新最新版本';
 		} elseif ($ret['code'] != 0) {
@@ -143,9 +143,9 @@ class third_daishua{
 	public function goods_list_by_cid($cid){
 		$url = '/api.php?act=goodslistbycid';
 		$post = 'cid='.$cid.'&user='.urlencode($this->config['username']).'&pass='.urlencode($this->config['password']);
-		$ret = $this->get_curl($url, $post);
-		if (!$ret = json_decode($ret, true)) {
-			return '打开对接网站失败';
+		$data = $this->get_curl($url, $post);
+		if (!$ret = json_decode($data, true)) {
+			return $this->fail_open($data);
 		} elseif ($ret['code'] == -5) {
 			return '对方网站未更新最新版本';
 		} elseif ($ret['code'] != 0) {
@@ -203,6 +203,17 @@ class third_daishua{
 		}else{
 			return $list;
 		}
+	}
+
+	private function fail_open($raw)
+	{
+		$host = (isset($this->config['protocol']) && $this->config['protocol']==1?'https://':'http://') . (isset($this->config['url']) ? $this->config['url'] : '');
+		if ($raw === false || $raw === '' || $raw === null) {
+			$hint = '无响应，请确认货源已启动。本地演示需运行 start-supplier.bat（127.0.0.1:8081），上线请改成真实货源域名';
+		} else {
+			$hint = '返回非JSON：' . mb_substr(preg_replace('/\s+/', ' ', strip_tags(strval($raw))), 0, 80);
+		}
+		return '打开对接网站失败（' . $host . '，' . $hint . '）';
 	}
 
 	private function get_curl($path,$post=0){
