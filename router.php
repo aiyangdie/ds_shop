@@ -1,5 +1,5 @@
 <?php
-// Local router: ignore PHP 8.x deprecations from obfuscated core
+// Local router: keep notices in php_local_error.log; hide deprecations if PHP 8 is used.
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
 ini_set('display_errors', '0');
 ini_set('log_errors', '1');

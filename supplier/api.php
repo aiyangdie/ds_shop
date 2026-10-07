@@ -10,7 +10,6 @@ $DATA_DIR = __DIR__ . '/data';
 $GOODS_FILE = $DATA_DIR . '/goods.json';
 $CARDS_FILE = $DATA_DIR . '/cards.json';
 $ORDERS_FILE = $DATA_DIR . '/orders.json';
-
 require_once __DIR__ . '/lib/Services.php';
 
 $cfgFile = __DIR__ . '/config.php';

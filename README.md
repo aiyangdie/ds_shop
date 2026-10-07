@@ -5,11 +5,12 @@
 | 项 | 说明 |
 |----|------|
 | 远程仓库 | [GitHub](https://github.com/aiyangdie/ds_shop) · [Gitee](https://gitee.com/giteeaike/ds_shop) |
-| 运行环境 | **PHP 7.4 必须**（核心含混淆代码，PHP 8.x 不可用） |
+| 运行环境 | **PHP 7.4（主要验证）**；业务核心已换为**可读源码**（`includes/core.func.php`、`includes/ajax.func.php` 等），不再依赖 VM 混淆 |
 | 数据库 | MySQL / MariaDB（表前缀默认 `shua_`） |
 | 本地 PHP | 推荐 `C:\tools\php74\php.exe` |
 | 默认模式 | **只开主站即可卖货**；AI / 货源 / APP 均为可选 |
 
+请勿把真实 `config.php` 提交进仓库。
 ____
 * 去除所有授权验证  
 * 支持自定义说说接口  
@@ -37,6 +38,8 @@ ____
 14. [安全建议](#安全建议)
 15. [远程仓库与忽略文件](#远程仓库与忽略文件)
 16. [使用协议](#使用协议)
+17. [已知限制](#已知限制)
+18. [许可证状态（待确认）](#许可证状态待确认)
 
 ---
 
@@ -309,11 +312,13 @@ tools\appbuild\run_worker.bat
 admin/           管理员后台（订单、商品、对接、AI、APP 等）
 user/            会员与分站中心
 assets/          静态资源、uploads、前台/后台 JS CSS
-includes/        核心库、插件、AI、Storage、AppFactory
+includes/        核心库（可读 core/ajax）、插件、AI、Storage、AppFactory
 other/           支付回调与相关页面
 install/         安装向导与升级 SQL
 template/        前台模板（store / default / faka / …）
 supplier/        资源站套件（API.md + 可独立部署实现）
+deobfuscated/    去混淆对照与恢复材料（非运行时）
+tools/deobfuscate  去混淆 / 回归工具
 tools/appshell   安卓壳模板
 tools/appbuild   本地打包 Worker
 config.php       数据库配置（不入库，需自行创建）
@@ -334,7 +339,7 @@ start-supplier.bat 本机货源 8081
 
 | 问题 | 处理 |
 |------|------|
-| PHP 8 打不开 / 白屏 | 换 **PHP 7.4** |
+| PHP 8 打不开 / 白屏 | 优先用 **PHP 7.4**（发布验证环境）；可读核心已去除 VM 混淆，PHP 8 仍未做完整门禁 |
 | 安装后空白 | 查 `config.php`、数据库、关闭展示错误后看日志 |
 | 支付成功不发卡 | 查异步通知是否达服务器、商品类型与库存、订单 `djzt` |
 | 对接一直失败 | 主站与货源是否分端口；`ping` 是否通；账号密码与协议是否匹配 |
@@ -386,3 +391,22 @@ start-supplier.bat 本机货源 8081
 - 此系统仅供个人学习、研究之用，请勿用于商业用途。  
 - 不提供任何技术支持。  
 - 在您下载源码后视为您已经了解使用协议并知晓法律协议。  
+
+---
+
+## 已知限制
+
+- PHP 8.x 未作为发布门禁验证；以 PHP 7.4 为主。  
+- 真实支付、短信、邮件、第三方社区下单未做破坏性联调；自动测试使用替身。  
+- `tools/deobfuscate/`、`deobfuscated/` 为恢复与对照材料，**不是**运行时依赖；线上以 `includes/` 下可读核心为准。  
+- 部分前台模板与第三方编辑器（KindEditor 等）版权/授权状态需使用者自行核对。  
+
+## 许可证状态（待确认）
+
+本仓库**不能**被理解为「全部代码已采用某一种 OSI 许可证」。
+
+- 主体业务代码来源于历史「彩虹自助下单 / 彩虹代刷」衍生版本，上游授权范围需发布者自行核对。README 中「已和原作者联系」属于历史声明，开源整理过程**未重新取证**。  
+- 第三方资源（Bootstrap、Layer、jQuery、KindEditor、PHPMailer、字体、模板皮肤等）请保留其原有版权声明。  
+- 在许可证确认前，建议仅作学习研究，不要声称本仓库整体为 MIT/Apache/GPL。  
+
+详见仓库根目录 [`THIRD_PARTY_NOTICES.md`](./THIRD_PARTY_NOTICES.md)。
